@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # База данных для Auth Service
+  auth_db:
+    image: postgres:15-alpine
+    container_name: auth_db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5431:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+
+  # База данных для Profile Service
+  profile_db:
+    image: postgres:15-alpine
+    container_name: profile_db
+    environment:
+      POSTGRES_DB: profile_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - profile_db_data:/var/lib/postgresql/data
+
+  # База данных для TS (TimeSheet) Service
+  ts_db:
+    image: postgres:15-alpine
+    container_name: ts_db
+    environment:
+      POSTGRES_DB: ts_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ts_db_data:/var/lib/postgresql/data
+
+  # Kafka в режиме KRaft (без Zookeeper)
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka_broker
+    ports:
+      - "9092:9092"
+      - "29093:29093"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' # Уникальная строка кластера
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  # UI для Kafka (чтобы видеть сообщения в браузере)
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: kafka_ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    depends_on:
+      - kafka
+
+volumes:
+  auth_db_data:
+  profile_db_data:
+  ts_db_data:
+  kafka_data:

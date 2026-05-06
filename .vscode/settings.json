@@ -1,0 +1,31 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5433,
+            "driver": "PostgreSQL",
+            "name": "Timesheet",
+            "database": "ts_db",
+            "username": "admin",
+            "password": "secret_password"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5431,
+            "driver": "PostgreSQL",
+            "name": "auth_db",
+            "database": "auth_db",
+            "username": "admin",
+            "password": "secret_password"
+        }
+    ],
+    "python.testing.pytestArgs": [
+        "services"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
