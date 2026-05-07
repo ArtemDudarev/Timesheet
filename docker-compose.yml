@@ -13,6 +13,30 @@ services:
       - "5431:5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      #test: ["CMD-SHELL", "pg_isready -U $${DB_USER} -d auth_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # Для запуска через докер
+  auth_service:
+    build: ./services/auth_service
+    container_name: auth_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@auth_db:5432/auth_db
+    depends_on:
+      auth_db:
+        condition: service_healthy
+    networks:
+      - app-network
 
   # База данных для Profile Service
   profile_db:
@@ -26,6 +50,8 @@ services:
       - "5432:5432"
     volumes:
       - profile_db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
   # База данных для TS (TimeSheet) Service
   ts_db:
@@ -39,6 +65,8 @@ services:
       - "5433:5432"
     volumes:
       - ts_db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
   # Kafka в режиме KRaft (без Zookeeper)
   kafka:
@@ -62,6 +90,8 @@ services:
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' # Уникальная строка кластера
     volumes:
       - kafka_data:/var/lib/kafka/data
+    networks:
+      - app-network
 
   # UI для Kafka (чтобы видеть сообщения в браузере)
   kafka-ui:
@@ -74,9 +104,15 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
     depends_on:
       - kafka
+    networks:
+      - app-network
 
 volumes:
   auth_db_data:
   profile_db_data:
   ts_db_data:
   kafka_data:
+
+networks:
+  app-network:
+    driver: bridge
