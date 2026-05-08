@@ -50,8 +50,28 @@ services:
       - "5432:5432"
     volumes:
       - profile_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d profile_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
+
+  # profile_service:
+  #   build: ./services/profile_service
+  #   container_name: profile_api
+  #   ports:
+  #     - "8001:8000"
+  #   environment:
+  #     - DB_USER=${DB_USER}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #     - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@profile_db:5432/profile_db
+  #   depends_on:
+  #     profile_db:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
 
   # База данных для TS (TimeSheet) Service
   ts_db:
@@ -67,6 +87,50 @@ services:
       - ts_db_data:/var/lib/postgresql/data
     networks:
       - app-network
+
+  # timesheet_service:
+  #   build: ./services/timesheet_service
+  #   container_name: timesheet_api
+  #   ports:
+  #     - "8002:8000"
+  #   environment:
+  #     - DB_USER=${DB_USER}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #     - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@ts_db:5432/ts_db
+  #   depends_on:
+  #     ts_db:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+
+  manager_db:
+    image: postgres:15-alpine
+    container_name: manager_db
+    environment:
+      POSTGRES_DB: manager_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - manager_db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # manager_service:
+  #   build: ./services/manager_service
+  #   container_name: manager_api
+  #   ports:
+  #     - "8003:8000"
+  #   environment:
+  #     - DB_USER=${DB_USER}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #     - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@manager_db:5432/manager_db
+  #   depends_on:
+  #     manager_db:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
 
   # Kafka в режиме KRaft (без Zookeeper)
   kafka:
@@ -111,7 +175,9 @@ volumes:
   auth_db_data:
   profile_db_data:
   ts_db_data:
+  manager_db_data:
   kafka_data:
+  
 
 networks:
   app-network:
