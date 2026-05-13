@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from .database import engine, Base
+from .database import engine
+from .models.base import Base
+from .routers.status import router as status_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,6 +17,7 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 app = FastAPI(title="Profile Service", lifespan=lifespan)
+app.include_router(status_router)
 
 @app.get("/health")
 async def health_check():
