@@ -7,7 +7,7 @@ from src.models.base import Base
 from .employee_role import employee_role
 
 class Employee(Base):
-    __tablename__ = "employees"
+    __tablename__ = "employee"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     
