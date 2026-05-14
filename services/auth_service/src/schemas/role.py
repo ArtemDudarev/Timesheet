@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel
 
 class RoleBase(BaseModel):
@@ -5,7 +6,7 @@ class RoleBase(BaseModel):
     description: str | None = None
 
 class RoleRead(RoleBase):
-    id: int
+    id: uuid.UUID # Изменено на uuid.UUID
     
     class Config:
         from_attributes = True
