@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from .role import RoleRead  # Импортируем схему роли
+from .role import RoleRead
 
 
 class EmployeeBase(BaseModel):
@@ -13,21 +13,18 @@ class EmployeeBase(BaseModel):
     employee_phone: Optional[str] = None
     employee_address: Optional[str] = None
     employee_birthday: Optional[date] = None
-    employee_status_id: int
+    employee_status_id: uuid.UUID          # ← исправлено на UUID
 
 
 class EmployeeCreate(EmployeeBase):
     employee_password: str
-    # Теперь список ролей (можно передавать несколько role_id)
-    role_ids: List[int]
+    role_ids: List[int]                    # список id ролей
 
 
 class EmployeeRead(EmployeeBase):
     employee_id: uuid.UUID
     employee_register_date: date
     employee_image_url: Optional[str] = None
-    
-    # Возвращаем полные объекты ролей
     roles: List[RoleRead]
 
     model_config = {
@@ -42,20 +39,19 @@ class EmployeeUpdate(BaseModel):
     employee_address: Optional[str] = None
     employee_birthday: Optional[date] = None
     employee_image_url: Optional[str] = None
-    employee_status_id: Optional[int] = None
-    # При обновлении тоже можно менять роли
+    employee_status_id: Optional[uuid.UUID] = None   # ← исправлено
     role_ids: Optional[List[int]] = None
 
 
-# Дополнительная схема (удобно для списка сотрудников)
+# Для получения списка сотрудников
 class EmployeeListRead(BaseModel):
     employee_id: uuid.UUID
     employee_first_name: str
     employee_last_name: str
     employee_email: EmailStr
     employee_number: Optional[str] = None
+    employee_status_id: uuid.UUID                    # ← исправлено
     roles: List[RoleRead]
-    employee_status_id: int
 
     model_config = {
         "from_attributes": True

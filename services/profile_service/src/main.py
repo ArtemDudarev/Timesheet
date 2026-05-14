@@ -8,10 +8,12 @@ from .models.base import Base
 from .models.status import Status
 from .models.role import Role
 from .models.employee_role import employee_role
+
 from .routers.status import router as status_router
-from .routers.employee import router as employee_router
 from .routers.role import router as role_router
 from .routers.employee_role import router as employee_role_router
+from .routers.employee import router as employee_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,9 +31,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Profile Service", lifespan=lifespan)
 
 app.include_router(status_router)
-app.include_router(employee_router)
 app.include_router(role_router)
 app.include_router(employee_role_router)
+app.include_router(employee_router)
 
 
 @app.get("/health")
