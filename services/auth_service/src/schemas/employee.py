@@ -24,3 +24,7 @@ class EmployeeLogin(BaseModel):
     email: EmailStr | None = None
     employee_number: str | None = None
     password: str
+    
+class EmployeeCreateSimple(BaseModel):
+    email: EmailStr
+    password: str
