@@ -7,7 +7,7 @@ from .models.base import Base
 # Импортируем модели, чтобы Base.metadata их увидел
 from .models.status import Status
 from .models.role import Role
-from .models.employee_role import EmployeeRole
+from .models.employee_role import employee_role
 
 from .routers.status import router as status_router
 from .routers.role import router as role_router

@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 
 class EmployeeRoleRead(BaseModel):
-    id: uuid.UUID
     employee_id: uuid.UUID
     role_id: uuid.UUID
 

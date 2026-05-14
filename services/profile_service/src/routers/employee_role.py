@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
@@ -28,16 +28,3 @@ async def get_employee_roles_by_role(
     service = EmployeeRoleService(session)
     return await service.get_by_role_id(role_id)
 
-
-@router.get("/{employee_role_id}", response_model=EmployeeRoleRead)
-async def get_employee_role(
-    employee_role_id: uuid.UUID,
-    session: AsyncSession = Depends(get_async_session),
-):
-    service = EmployeeRoleService(session)
-    employee_role = await service.get_by_id(employee_role_id)
-
-    if employee_role is None:
-        raise HTTPException(status_code=404, detail="Employee role not found")
-
-    return employee_role
