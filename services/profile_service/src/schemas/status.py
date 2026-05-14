@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel, ConfigDict
 
 class StatusBase(BaseModel):
@@ -8,6 +9,7 @@ class StatusCreate(StatusBase):
     pass
 
 class StatusRead(StatusBase):
-    status_id: int
+    # Теперь здесь UUID
+    status_id: uuid.UUID
     
     model_config = ConfigDict(from_attributes=True)
