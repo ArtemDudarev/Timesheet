@@ -23,7 +23,6 @@ class Employee(Base):
         String(50), name="employee_number", unique=True, nullable=False
     )
 
-    # Исправленный кусок в классе Employee
     roles: Mapped[List["Role"]] = relationship(
         "Role",
         secondary=employee_role,
