@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import uuid
+
 from sqlalchemy import ForeignKey
+from sqlalchemy import Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import Base
@@ -9,15 +12,17 @@ from src.models.base import Base
 class EmployeeRole(Base):
     __tablename__ = "employee_role"
 
-    employee_role_id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
 
-    employee_role_employee_id: Mapped[int] = mapped_column(
-        ForeignKey("employee.employee_id", ondelete="CASCADE"),
+    employee_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("employee.id", ondelete="CASCADE"),
         nullable=False,
     )
 
-    employee_role_role_id: Mapped[int] = mapped_column(
-        ForeignKey("role.role_id", ondelete="CASCADE"),
+    role_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("role.id", ondelete="CASCADE"),
         nullable=False,
     )
 

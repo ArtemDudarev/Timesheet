@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +13,7 @@ router = APIRouter(prefix="/employee-roles", tags=["Employee Roles"])
 
 @router.get("/employee/{employee_id}", response_model=list[EmployeeRoleRead])
 async def get_employee_roles_by_employee(
-    employee_id: int,
+    employee_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeRoleService(session)
@@ -20,7 +22,7 @@ async def get_employee_roles_by_employee(
 
 @router.get("/role/{role_id}", response_model=list[EmployeeRoleRead])
 async def get_employee_roles_by_role(
-    role_id: int,
+    role_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeRoleService(session)
@@ -29,7 +31,7 @@ async def get_employee_roles_by_role(
 
 @router.get("/{employee_role_id}", response_model=EmployeeRoleRead)
 async def get_employee_role(
-    employee_role_id: int,
+    employee_role_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeRoleService(session)

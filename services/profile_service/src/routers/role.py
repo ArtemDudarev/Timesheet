@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +21,7 @@ async def get_roles(
 
 @router.get("/{role_id}", response_model=RoleRead)
 async def get_role(
-    role_id: int,
+    role_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = RoleService(session)

@@ -1,10 +1,12 @@
+import uuid
+
 from pydantic import BaseModel
 
 
 class EmployeeRoleRead(BaseModel):
-    employee_role_id: int
-    employee_role_employee_id: int
-    employee_role_role_id: int
+    id: uuid.UUID
+    employee_id: uuid.UUID
+    role_id: uuid.UUID
 
     class Config:
         from_attributes = True
