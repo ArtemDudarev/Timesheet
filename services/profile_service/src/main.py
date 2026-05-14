@@ -8,7 +8,6 @@ from .models.base import Base
 from .models.status import Status
 from .models.role import Role
 from .models.employee_role import employee_role
-
 from .routers.status import router as status_router
 from .routers.employee import router as employee_router
 from .routers.role import router as role_router

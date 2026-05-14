@@ -1,10 +1,15 @@
-from typing import Optional
+from __future__ import annotations
+
 import uuid
 from datetime import date
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text
+from typing import List, Optional
+
+from sqlalchemy import String, Text, Date, ForeignKey
+from sqlalchemy import Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as Uuid
-from src.core.database import Base
+
+from src.models.base import Base
+from src.models.employee_role import employee_role   # ← оставляем как у тебя
 
 
 class Employee(Base):
@@ -13,14 +18,14 @@ class Employee(Base):
     employee_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, primary_key=True, default=uuid.uuid4
     )
-    
+
     employee_first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     employee_last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     employee_email: Mapped[str] = mapped_column(
         String(255), unique=True, nullable=False, index=True
     )
     employee_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    
+
     employee_number: Mapped[Optional[str]] = mapped_column(String(50), unique=True, nullable=True)
     employee_phone: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)
     employee_address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -33,20 +38,23 @@ class Employee(Base):
         Uuid, ForeignKey("status.status_id"), nullable=False
     )
 
-    # === Many-to-Many с ролями ===
-    roles: Mapped[list["EmployeeRole"]] = relationship(
+    # Many-to-Many с ролями (под твою существующую таблицу)
+    roles: Mapped[List["EmployeeRole"]] = relationship(
         "EmployeeRole",
-        secondary="employee_employee_role",   # название ассоциативной таблицы
+        secondary=employee_role,           # ← используем твою таблицу
         back_populates="employees",
-        lazy="selectin"                       # удобно для API
+        lazy="selectin"
     )
 
-    # Relationships
-    status: Mapped["Status"] = relationship("Status", back_populates="employees")
-    
-    projects: Mapped[list["EmployeeProject"]] = relationship(
+    # Остальные связи
+    status: Mapped["Status"] = relationship(
+        "Status", back_populates="employees"
+    )
+
+    projects: Mapped[List["EmployeeProject"]] = relationship(
         "EmployeeProject", back_populates="employee"
     )
-    project_roles: Mapped[list["EmployeeProjectRole"]] = relationship(
+
+    project_roles: Mapped[List["EmployeeProjectRole"]] = relationship(
         "EmployeeProjectRole", back_populates="employee"
     )
