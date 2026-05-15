@@ -1,7 +1,7 @@
 import uuid
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import List
-from .role import RoleRead # Импортируем схему роли для EmployeeRead
+from .role import RoleRead
 
 class EmployeeBase(BaseModel):
     email: EmailStr
@@ -9,16 +9,13 @@ class EmployeeBase(BaseModel):
 
 class EmployeeCreate(EmployeeBase):
     password: str
-    # Изменяем на список ID ролей
-    role_id: List[int] 
+    role_id: List[uuid.UUID]  # ИСПРАВЛЕНО: было List[int]
 
 class EmployeeRead(EmployeeBase):
     id: uuid.UUID
-    # Возвращаем список полных объектов ролей
     roles: List[RoleRead]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class EmployeeLogin(BaseModel):
     email: EmailStr | None = None

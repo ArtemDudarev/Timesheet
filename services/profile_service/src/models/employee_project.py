@@ -8,7 +8,7 @@ employee_project = Table(
     Column(
         "employee_id",
         Uuid,
-        ForeignKey("employee.id", ondelete="CASCADE"),
+        ForeignKey("employee.employee_id", ondelete="CASCADE"),
         primary_key=True
     ),
 
