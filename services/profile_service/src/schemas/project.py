@@ -1,9 +1,9 @@
 import uuid
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class ProjectBase(BaseModel):
-    project_name: str
-    project_status: str
+    name: str
+    status: str
 
 class ProjectCreate(ProjectBase):
     pass
@@ -11,9 +11,8 @@ class ProjectCreate(ProjectBase):
 class ProjectRead(ProjectBase):
     id: uuid.UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProjectUpdate(BaseModel):
-    project_name: str | None = None
-    project_status: str | None = None
+    name: str | None = None
+    status: str | None = None
