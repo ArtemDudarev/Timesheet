@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from ..models.status import Status
-from ..schemas.status import StatusCreate
+from src.models.status import Status
+from src.schemas.status import StatusCreate
 
 async def get_all_statuses(session: AsyncSession):
     result = await session.execute(select(Status))
