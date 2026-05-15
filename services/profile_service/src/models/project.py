@@ -4,7 +4,7 @@ from sqlalchemy import String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
-# from .employee_project import employee_project
+from .employee_project import employee_project
 
 class Project(Base):
     __tablename__ = "project"

@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from .database import engine
 from .models.base import Base
 from .routers.status import router as status_router
+from .routers.project import router as project_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Profile Service", lifespan=lifespan)
 app.include_router(status_router)
+app.include_router(project_router)
 
 @app.get("/health")
 async def health_check():
