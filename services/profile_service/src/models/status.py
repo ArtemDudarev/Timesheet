@@ -1,10 +1,14 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from .base import Base
 import uuid
+from typing import List
+from sqlalchemy import String, Text, Uuid
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from .base import Base
 
 class Status(Base):
     __tablename__ = "status"
 
-    status_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
-    status_name: Mapped[str] = mapped_column(unique=True, nullable=False)
-    status_description: Mapped[str | None] = mapped_column(nullable=True)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    employees: Mapped[List["Employee"]] = relationship("Employee", back_populates="status")

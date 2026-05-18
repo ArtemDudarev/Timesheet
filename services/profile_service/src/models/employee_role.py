@@ -1,7 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Table, Uuid
-
 from src.models.base import Base
-
 
 employee_role = Table(
     "employee_role",

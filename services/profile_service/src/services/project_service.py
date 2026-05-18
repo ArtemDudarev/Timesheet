@@ -1,0 +1,69 @@
+from uuid import UUID
+from fastapi import HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.project import Project
+from src.schemas.project import ProjectCreate, ProjectUpdate
+
+class ProjectService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_id(self, project_id: UUID) -> Project | None:
+        query = select(Project).where(Project.id == project_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_by_name(self, name: str) -> Project | None:
+        query = select(Project).where(Project.name == name)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_all_projects(self) -> list[Project]:
+        query = select(Project)
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def create_project(self, data: ProjectCreate) -> Project:
+        new_project = Project(name=data.name, status=data.status)
+        try:
+            self.session.add(new_project)
+            await self.session.commit()
+            await self.session.refresh(new_project)
+            return new_project
+        except IntegrityError as e:
+            await self.session.rollback()
+            error_msg = str(e.orig).lower()
+            if "name" in error_msg or "project" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Проект '{data.name}' уже существует"
+                )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ошибка при создании проекта")
+
+    async def update_project(self, project_id: UUID, data: ProjectUpdate) -> Project | None:
+        project = await self.get_by_id(project_id)
+        if not project:
+            return None
+
+        if data.name is not None:
+            project.name = data.name
+        if data.status is not None:
+            project.status = data.status
+
+        try:
+            await self.session.commit()
+            await self.session.refresh(project)
+            return project
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ошибка при обновлении проекта")
+
+    async def delete_project(self, project_id: UUID) -> bool:
+        project = await self.get_by_id(project_id)
+        if not project:
+            return False
+        await self.session.delete(project)
+        await self.session.commit()
+        return True
