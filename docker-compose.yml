@@ -114,23 +114,28 @@ services:
       - "5434:5432"
     volumes:
       - manager_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d manager_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
-  # manager_service:
-  #   build: ./services/manager_service
-  #   container_name: manager_api
-  #   ports:
-  #     - "8003:8000"
-  #   environment:
-  #     - DB_USER=${DB_USER}
-  #     - DB_PASSWORD=${DB_PASSWORD}
-  #     - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@manager_db:5432/manager_db
-  #   depends_on:
-  #     manager_db:
-  #       condition: service_healthy
-  #   networks:
-  #     - app-network
+  manager_service:
+    build: ./services/manager_service
+    container_name: manager_api
+    ports:
+      - "8003:8000"
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@manager_db:5432/manager_db
+    depends_on:
+      manager_db:
+        condition: service_healthy
+    networks:
+      - app-network
 
   # Kafka в режиме KRaft (без Zookeeper)
   kafka:

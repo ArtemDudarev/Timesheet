@@ -28,6 +28,6 @@ async def get_role(
     role = await service.get_by_id(role_id)
 
     if role is None:
-        raise HTTPException(status_code=404, detail="Role not found")
+        raise HTTPException(status_code=404, detail="Роль не найдена")
 
     return role
