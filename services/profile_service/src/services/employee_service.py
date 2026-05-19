@@ -36,17 +36,23 @@ class EmployeeService:
         try:
             self.db.add(employee)
             await self.db.commit()
-            await self.db.refresh(employee, attribute_names=["roles"])
+            await self.db.refresh(
+                employee,
+                attribute_names=["roles", "status", "projects", "project_roles"],
+            )
             return employee
         except IntegrityError as exc:
             await self.db.rollback()
             self._raise_employee_integrity_error(exc, employee_in.email, employee_in.number)
 
-    async def get_employee_by_id(self, employee_id: uuid.UUID) -> Optional[Employee]:
+    async def get_employee_full_by_id(self, employee_id: uuid.UUID) -> Optional[Employee]:
         result = await self.db.execute(
             select(Employee).where(Employee.id == employee_id)
         )
         return result.scalar_one_or_none()
+
+    async def get_employee_by_id(self, employee_id: uuid.UUID) -> Optional[Employee]:
+        return await self.get_employee_full_by_id(employee_id)
 
     async def get_employee_by_email(self, email: str) -> Optional[Employee]:
         result = await self.db.execute(
@@ -60,23 +66,29 @@ class EmployeeService:
         )
         return result.scalars().all()
 
-    async def update_employee(self, employee: Employee, employee_in: EmployeeUpdate) -> Employee:
+    async def update_employee_profile(
+        self,
+        employee: Employee,
+        employee_in: EmployeeUpdate,
+    ) -> Employee:
         update_data = employee_in.model_dump(exclude_unset=True)
-        role_ids = update_data.pop("role_ids", None)
 
         for field, value in update_data.items():
             setattr(employee, field, value)
 
-        if role_ids is not None:
-            employee.roles = await self._get_roles_or_raise(role_ids)
-
         try:
             await self.db.commit()
-            await self.db.refresh(employee, attribute_names=["roles"])
+            await self.db.refresh(
+                employee,
+                attribute_names=["roles", "status", "projects", "project_roles"],
+            )
             return employee
         except IntegrityError as exc:
             await self.db.rollback()
             self._raise_employee_integrity_error(exc, employee.email, employee.number)
+
+    async def update_employee(self, employee: Employee, employee_in: EmployeeUpdate) -> Employee:
+        return await self.update_employee_profile(employee, employee_in)
 
     async def _get_roles_or_raise(self, role_ids: list[uuid.UUID]) -> list[Role]:
         role_ids = list(dict.fromkeys(role_ids))

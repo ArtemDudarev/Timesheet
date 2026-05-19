@@ -28,7 +28,7 @@ async def get_employee(
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeService(session)
-    employee = await service.get_employee_by_id(employee_id)
+    employee = await service.get_employee_full_by_id(employee_id)
     if not employee:
         raise HTTPException(status_code=404, detail="Сотрудник не найден")
     return employee
@@ -51,7 +51,7 @@ async def update_employee(
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeService(session)
-    employee = await service.get_employee_by_id(employee_id)
+    employee = await service.get_employee_full_by_id(employee_id)
     if not employee:
         raise HTTPException(status_code=404, detail="Сотрудник не найден")
-    return await service.update_employee(employee, employee_in)
+    return await service.update_employee_profile(employee, employee_in)

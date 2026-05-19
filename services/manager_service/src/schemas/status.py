@@ -8,6 +8,10 @@ class StatusBase(BaseModel):
 class StatusCreate(StatusBase):
     pass
 
+class StatusUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
 class StatusRead(StatusBase):
     id: uuid.UUID
     
