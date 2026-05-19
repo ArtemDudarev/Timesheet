@@ -7,7 +7,7 @@ from src.services.project_service import ProjectService
 
 router = APIRouter(prefix="/project", tags=["Project"])
 
-@router.post("/create", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
 async def create_project(
     payload: ProjectCreate,
     session: AsyncSession = Depends(get_async_session)
@@ -17,6 +17,13 @@ async def create_project(
     if existing_project:
         raise HTTPException(status_code=400, detail="Проект уже существует")
     return await service.create_project(payload)
+
+@router.post("/create", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
+async def create_project_legacy(
+    payload: ProjectCreate,
+    session: AsyncSession = Depends(get_async_session)
+):
+    return await create_project(payload, session)
 
 @router.get("/", response_model=list[ProjectRead])
 async def get_all_projects(session: AsyncSession = Depends(get_async_session)):

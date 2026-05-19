@@ -1,13 +1,17 @@
 from __future__ import annotations
+
 import uuid
 from datetime import date
 from typing import List, Optional
-from sqlalchemy import String, Text, Date, ForeignKey, Uuid
+
+from sqlalchemy import Date, ForeignKey, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import Base
-from src.models.employee_role import employee_role
 from src.models.employee_project import employee_project
+from src.models.employee_project_role import employee_project_role_table
+from src.models.employee_role import employee_role
+
 
 class Employee(Base):
     __tablename__ = "employee"
@@ -24,27 +28,35 @@ class Employee(Base):
     register_date: Mapped[date] = mapped_column(Date, nullable=False)
     image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
-    status_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("status.id"), nullable=False)
+    status_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("status.id"),
+        nullable=False,
+    )
 
-    # ИСПРАВЛЕНО: Связь указывает на целевой класс "Role"
     roles: Mapped[List["Role"]] = relationship(
         "Role",
         secondary=employee_role,
         back_populates="employees",
-        lazy="selectin"
+        lazy="selectin",
     )
 
-    status: Mapped["Status"] = relationship("Status", back_populates="employees")
+    status: Mapped["Status"] = relationship(
+        "Status",
+        back_populates="employees",
+        lazy="selectin",
+    )
 
-    # ИСПРАВЛЕНО: Связь указывает на целевой класс "Project" через secondary-таблицу
     projects: Mapped[List["Project"]] = relationship(
-        "Project", 
+        "Project",
         secondary=employee_project,
         back_populates="employees",
-        lazy="selectin"
+        lazy="selectin",
     )
 
-    # # Оставляем, если класс EmployeeProjectRole объявлен в другой части кода коллег
-    # project_roles: Mapped[List["EmployeeProjectRole"]] = relationship(
-    #     "EmployeeProjectRole", back_populates="employee"
-    # )
+    project_roles: Mapped[List["ProjectRole"]] = relationship(
+        "ProjectRole",
+        secondary=employee_project_role_table,
+        back_populates="employees",
+        lazy="selectin",
+    )

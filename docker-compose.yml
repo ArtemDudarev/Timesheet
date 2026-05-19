@@ -27,7 +27,7 @@ services:
     build: ./services/auth_service
     container_name: auth_api
     ports:
-      - "8000:8000"
+      - "${AUTH_SERVICE_PORT}:8000"
     environment:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -62,7 +62,7 @@ services:
     build: ./services/profile_service
     container_name: profile_api
     ports:
-      - "8001:8000"
+      - "${PROFILE_SERVICE_PORT}:8000"
     environment:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -92,7 +92,7 @@ services:
   #   build: ./services/timesheet_service
   #   container_name: timesheet_api
   #   ports:
-  #     - "8002:8000"
+  #     - "${TIMESHEET_SERVICE_PORT}:8000"
   #   environment:
   #     - DB_USER=${DB_USER}
   #     - DB_PASSWORD=${DB_PASSWORD}
@@ -126,7 +126,7 @@ services:
     build: ./services/manager_service
     container_name: manager_api
     ports:
-      - "8003:8000"
+      - "${MANAGER_SERVICE_PORT}:8000"
     environment:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}

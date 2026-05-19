@@ -1,8 +1,14 @@
 import uuid
 from datetime import date
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional, List
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from .project import ProjectRead
+from .project_role import ProjectRoleResponse
 from .role import RoleRead
+from .status import StatusRead
+
 
 class EmployeeBase(BaseModel):
     first_name: str
@@ -14,17 +20,23 @@ class EmployeeBase(BaseModel):
     birthday: Optional[date] = None
     status_id: uuid.UUID
 
+
 class EmployeeCreate(EmployeeBase):
     password: str
-    role_ids: List[uuid.UUID]  # ИСПРАВЛЕНО: Список UUID вместо int
+    role_ids: List[uuid.UUID]
+
 
 class EmployeeRead(EmployeeBase):
     id: uuid.UUID
     register_date: date
     image_url: Optional[str] = None
     roles: List[RoleRead]
+    status: StatusRead
+    projects: List[ProjectRead] = Field(default_factory=list)
+    project_roles: List[ProjectRoleResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class EmployeeUpdate(BaseModel):
     first_name: Optional[str] = None
@@ -33,8 +45,7 @@ class EmployeeUpdate(BaseModel):
     address: Optional[str] = None
     birthday: Optional[date] = None
     image_url: Optional[str] = None
-    status_id: Optional[uuid.UUID] = None
-    role_ids: Optional[List[uuid.UUID]] = None
+
 
 class EmployeeListRead(BaseModel):
     id: uuid.UUID
