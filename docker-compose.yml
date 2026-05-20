@@ -1,188 +1,187 @@
-version: '3.8'
+version: "3.8"
+
+x-postgres-common: &postgres-common
+  image: postgres:15-alpine
+  environment:
+    POSTGRES_USER: ${DB_USER}
+    POSTGRES_PASSWORD: ${DB_PASSWORD}
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  networks:
+    - app-network
+
+x-service-common: &service-common
+  restart: unless-stopped
+  env_file:
+    - .env
+  networks:
+    - app-network
 
 services:
-  # База данных для Auth Service
+
+  # =========================
+  # AUTH DB
+  # =========================
   auth_db:
-    image: postgres:15-alpine
-    container_name: auth_db
+    <<: *postgres-common
     environment:
       POSTGRES_DB: auth_db
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5431:5432"
+      - "${AUTH_DB_PORT}:5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d auth_db"]
-      #test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app-network
 
-  # Для запуска через докер
   auth_service:
+    <<: *service-common
     build: ./services/auth_service
-    container_name: auth_api
     ports:
       - "${AUTH_SERVICE_PORT}:8000"
     environment:
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@auth_db:5432/auth_db
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@auth_db:5432/auth_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
     depends_on:
       auth_db:
         condition: service_healthy
-    networks:
-      - app-network
 
-  # База данных для Profile Service
+  # =========================
+  # PROFILE DB
+  # =========================
   profile_db:
-    image: postgres:15-alpine
-    container_name: profile_db
+    <<: *postgres-common
     environment:
       POSTGRES_DB: profile_db
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${PROFILE_DB_PORT}:5432"
     volumes:
       - profile_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d profile_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app-network
 
   profile_service:
+    <<: *service-common
     build: ./services/profile_service
-    container_name: profile_api
     ports:
       - "${PROFILE_SERVICE_PORT}:8000"
     environment:
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@profile_db:5432/profile_db
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@profile_db:5432/profile_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
     depends_on:
       profile_db:
         condition: service_healthy
-    networks:
-      - app-network
 
-  # База данных для TS (TimeSheet) Service
-  ts_db:
-    image: postgres:15-alpine
-    container_name: ts_db
-    environment:
-      POSTGRES_DB: ts_db
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5433:5432"
-    volumes:
-      - ts_db_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-
-  # timesheet_service:
-  #   build: ./services/timesheet_service
-  #   container_name: timesheet_api
-  #   ports:
-  #     - "${TIMESHEET_SERVICE_PORT}:8000"
-  #   environment:
-  #     - DB_USER=${DB_USER}
-  #     - DB_PASSWORD=${DB_PASSWORD}
-  #     - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@ts_db:5432/ts_db
-  #   depends_on:
-  #     ts_db:
-  #       condition: service_healthy
-  #   networks:
-  #     - app-network
-
+  # =========================
+  # MANAGER DB
+  # =========================
   manager_db:
-    image: postgres:15-alpine
-    container_name: manager_db
+    <<: *postgres-common
     environment:
       POSTGRES_DB: manager_db
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5434:5432"
+      - "${MANAGER_DB_PORT}:5432"
     volumes:
       - manager_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d manager_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - app-network
 
   manager_service:
+    <<: *service-common
     build: ./services/manager_service
-    container_name: manager_api
     ports:
       - "${MANAGER_SERVICE_PORT}:8000"
     environment:
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@manager_db:5432/manager_db
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@manager_db:5432/manager_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
     depends_on:
       manager_db:
         condition: service_healthy
-    networks:
-      - app-network
 
-  # Kafka в режиме KRaft (без Zookeeper)
+  # =========================
+  # TIMESHEET DB
+  # =========================
+  ts_db:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: ts_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${TIMESHEET_DB_PORT}:5432"
+    volumes:
+      - ts_db_data:/var/lib/postgresql/data
+
+  # =========================
+  # KAFKA
+  # =========================
   kafka:
     image: confluentinc/cp-kafka:latest
-    container_name: kafka_broker
     ports:
-      - "9092:9092"
-      - "29093:29093"
+      - "${KAFKA_EXTERNAL_PORT}:9092"
+      - "${KAFKA_CONTROLLER_PORT}:29093"
+
     environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+
       KAFKA_NODE_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
-      KAFKA_JMX_PORT: 9101
-      KAFKA_JMX_HOSTNAME: localhost
-      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      KAFKA_LISTENERS: >
+        PLAINTEXT://:${KAFKA_INTERNAL_PORT},
+        CONTROLLER://:${KAFKA_CONTROLLER_PORT},
+        PLAINTEXT_HOST://:9092
+
+      KAFKA_ADVERTISED_LISTENERS: >
+        PLAINTEXT://kafka:${KAFKA_INTERNAL_PORT},
+        PLAINTEXT_HOST://localhost:${KAFKA_EXTERNAL_PORT}
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: >
+        CONTROLLER:PLAINTEXT,
+        PLAINTEXT:PLAINTEXT,
+        PLAINTEXT_HOST:PLAINTEXT
+
+      KAFKA_CONTROLLER_QUORUM_VOTERS: >
+        1@kafka:${KAFKA_CONTROLLER_PORT}
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
-      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' # Уникальная строка кластера
+
     volumes:
       - kafka_data:/var/lib/kafka/data
+
     networks:
       - app-network
 
-  # UI для Kafka (чтобы видеть сообщения в браузере)
+  # =========================
+  # KAFKA UI
+  # =========================
   kafka-ui:
     image: ghcr.io/kafbat/kafka-ui:latest
-    container_name: kafka_ui
     ports:
-      - "8080:8080"
+      - "${KAFKA_UI_PORT}:8080"
+
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+
     depends_on:
       - kafka
+
     networks:
       - app-network
 
 volumes:
   auth_db_data:
   profile_db_data:
-  ts_db_data:
   manager_db_data:
+  ts_db_data:
   kafka_data:
-  
 
 networks:
   app-network:
