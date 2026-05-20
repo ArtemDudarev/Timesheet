@@ -1,12 +1,16 @@
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from fastapi import FastAPI
 
 from .database import engine
+from .kafka.consumer import KafkaEventConsumer
 from .kafka.producer import KafkaEventProducer
 from src.models.base import Base
 from src.models.employee import Employee
 from src.models.role import Role
 from src.routers.employee import router as auth_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,8 +18,16 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     app.state.kafka_producer = KafkaEventProducer()
     await app.state.kafka_producer.start()
+    app.state.kafka_consumer = KafkaEventConsumer()
+    app.state.kafka_consumer_task = asyncio.create_task(
+        app.state.kafka_consumer.start()
+    )
     yield
     await app.state.kafka_producer.stop()
+    app.state.kafka_consumer_task.cancel()
+    await app.state.kafka_consumer.stop()
+    with suppress(asyncio.CancelledError):
+        await app.state.kafka_consumer_task
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)

@@ -1,9 +1,14 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
+from src.kafka.events import (
+    publish_employee_project_assigned,
+    publish_employee_role_assigned,
+    publish_employee_status_changed,
+)
 from src.schemas.employee import (
     EmployeeListRead,
     EmployeeProjectRolesUpdate,
@@ -51,22 +56,33 @@ async def get_employee(
 async def update_employee_roles(
     employee_id: uuid.UUID,
     payload: EmployeeRolesUpdate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeService(session)
     employee = await get_employee_or_404(employee_id, service)
-    return await service.update_employee_roles(employee, payload.role_ids)
+    employee = await service.update_employee_roles(employee, payload.role_ids)
+    await publish_employee_role_assigned(request.app.state.kafka_producer, employee)
+    return employee
 
 
 @router.patch("/{employee_id}/projects", response_model=EmployeeRead)
 async def update_employee_projects(
     employee_id: uuid.UUID,
     payload: EmployeeProjectsUpdate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeService(session)
     employee = await get_employee_or_404(employee_id, service)
-    return await service.update_employee_projects(employee, payload.project_ids)
+    employee = await service.update_employee_projects(employee, payload.project_ids)
+    for project in employee.projects:
+        await publish_employee_project_assigned(
+            request.app.state.kafka_producer,
+            employee.id,
+            project.id,
+        )
+    return employee
 
 
 @router.patch("/{employee_id}/project-roles", response_model=EmployeeRead)
@@ -84,8 +100,11 @@ async def update_employee_project_roles(
 async def update_employee_status(
     employee_id: uuid.UUID,
     payload: EmployeeStatusUpdate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = EmployeeService(session)
     employee = await get_employee_or_404(employee_id, service)
-    return await service.update_employee_status(employee, payload.status_id)
+    employee = await service.update_employee_status(employee, payload.status_id)
+    await publish_employee_status_changed(request.app.state.kafka_producer, employee)
+    return employee

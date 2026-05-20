@@ -7,31 +7,43 @@ from typing import Any
 from aiokafka import AIOKafkaConsumer
 
 from src.kafka.topics import (
-    EMPLOYEE_CREATED_TOPIC,
+    EMPLOYEE_ROLE_ASSIGNED_TOPIC,
     EMPLOYEE_UPDATED_TOPIC,
+    ROLE_CREATED_TOPIC,
+    ROLE_DELETED_TOPIC,
+    ROLE_UPDATED_TOPIC,
 )
 from src.kafka.handlers import (
-    handle_employee_created,
+    handle_employee_role_assigned,
     handle_employee_updated,
+    handle_role_created,
+    handle_role_deleted,
+    handle_role_updated,
 )
 
 logger = logging.getLogger(__name__)
 
 HANDLERS = {
-    "employee.created": handle_employee_created,
     "employee.updated": handle_employee_updated,
+    "employee.role_assigned": handle_employee_role_assigned,
+    "role.created": handle_role_created,
+    "role.updated": handle_role_updated,
+    "role.deleted": handle_role_deleted,
 }
 
 TOPICS = [
-    EMPLOYEE_CREATED_TOPIC,
     EMPLOYEE_UPDATED_TOPIC,
+    EMPLOYEE_ROLE_ASSIGNED_TOPIC,
+    ROLE_CREATED_TOPIC,
+    ROLE_UPDATED_TOPIC,
+    ROLE_DELETED_TOPIC,
 ]
 
 
 class KafkaEventConsumer:
     def __init__(self) -> None:
         self.bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
-        self.group_id = os.getenv("KAFKA_GROUP_ID", "manager-service")
+        self.group_id = os.getenv("KAFKA_GROUP_ID", "auth-service")
         self._consumer: AIOKafkaConsumer | None = None
         self._running = False
 

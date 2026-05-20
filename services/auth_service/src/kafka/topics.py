@@ -1,1 +1,6 @@
 EMPLOYEE_CREATED_TOPIC = "employee.created"
+EMPLOYEE_UPDATED_TOPIC = "employee.updated"
+EMPLOYEE_ROLE_ASSIGNED_TOPIC = "employee.role_assigned"
+ROLE_CREATED_TOPIC = "role.created"
+ROLE_UPDATED_TOPIC = "role.updated"
+ROLE_DELETED_TOPIC = "role.deleted"

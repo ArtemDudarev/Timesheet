@@ -1,0 +1,146 @@
+import uuid
+from typing import Any
+
+from src.kafka.producer import KafkaEventProducer
+from src.kafka.topics import (
+    EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
+    EMPLOYEE_ROLE_ASSIGNED_TOPIC,
+    EMPLOYEE_STATUS_CHANGED_TOPIC,
+    PROJECT_CREATED_TOPIC,
+    PROJECT_DELETED_TOPIC,
+    PROJECT_UPDATED_TOPIC,
+    ROLE_CREATED_TOPIC,
+    ROLE_DELETED_TOPIC,
+    ROLE_UPDATED_TOPIC,
+)
+from src.models.employee import Employee
+from src.models.project import Project
+from src.models.role import Role
+
+
+async def publish_employee_role_assigned(
+    producer: KafkaEventProducer,
+    employee: Employee,
+) -> None:
+    await producer.publish(
+        EMPLOYEE_ROLE_ASSIGNED_TOPIC,
+        {
+            "event_type": "employee.role_assigned",
+            "employee_id": employee.id,
+            "roles": [
+                {"id": role.id, "name": role.name, "description": role.description}
+                for role in employee.roles
+            ],
+        },
+    )
+
+
+async def publish_employee_status_changed(
+    producer: KafkaEventProducer,
+    employee: Employee,
+) -> None:
+    await producer.publish(
+        EMPLOYEE_STATUS_CHANGED_TOPIC,
+        {
+            "event_type": "employee.status_changed",
+            "employee_id": employee.id,
+            "status": {
+                "id": employee.status.id,
+                "name": employee.status.name,
+                "description": employee.status.description,
+            },
+        },
+    )
+
+
+async def publish_role_created(
+    producer: KafkaEventProducer,
+    role: Role,
+) -> None:
+    await producer.publish(
+        ROLE_CREATED_TOPIC,
+        {
+            "event_type": "role.created",
+            "role": {"id": role.id, "name": role.name, "description": role.description},
+        },
+    )
+
+
+async def publish_role_updated(
+    producer: KafkaEventProducer,
+    role: Role,
+) -> None:
+    await producer.publish(
+        ROLE_UPDATED_TOPIC,
+        {
+            "event_type": "role.updated",
+            "role": {"id": role.id, "name": role.name, "description": role.description},
+        },
+    )
+
+
+async def publish_role_deleted(
+    producer: KafkaEventProducer,
+    role_id: uuid.UUID,
+) -> None:
+    await producer.publish(
+        ROLE_DELETED_TOPIC,
+        {
+            "event_type": "role.deleted",
+            "role_id": role_id,
+        },
+    )
+
+
+async def publish_project_created(
+    producer: KafkaEventProducer,
+    project: Project,
+) -> None:
+    await producer.publish(
+        PROJECT_CREATED_TOPIC,
+        {
+            "event_type": "project.created",
+            "project": {"id": project.id, "name": project.name, "status": project.status},
+        },
+    )
+
+
+async def publish_project_updated(
+    producer: KafkaEventProducer,
+    project: Project,
+) -> None:
+    await producer.publish(
+        PROJECT_UPDATED_TOPIC,
+        {
+            "event_type": "project.updated",
+            "project": {"id": project.id, "name": project.name, "status": project.status},
+        },
+    )
+
+
+async def publish_project_deleted(
+    producer: KafkaEventProducer,
+    project_id: uuid.UUID,
+) -> None:
+    await producer.publish(
+        PROJECT_DELETED_TOPIC,
+        {
+            "event_type": "project.deleted",
+            "project_id": project_id,
+        },
+    )
+
+
+async def publish_employee_project_assigned(
+    producer: KafkaEventProducer,
+    employee_id: uuid.UUID,
+    project_id: uuid.UUID,
+) -> None:
+    await producer.publish(
+        EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
+        {
+            "event_type": "employee.project_assigned",
+            "employee_id": employee_id,
+            "project_id": project_id,
+        },
+    )

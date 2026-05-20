@@ -2,24 +2,69 @@ import asyncio
 import json
 import logging
 import os
-from datetime import date
 from typing import Any
-from uuid import UUID
 
 from aiokafka import AIOKafkaConsumer
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import async_session_maker
-from src.kafka.topics import EMPLOYEE_CREATED_TOPIC
-from src.models.employee import Employee
-from src.models.role import Role
-from src.models.status import Status
+from src.kafka.topics import (
+    EMPLOYEE_CREATED_TOPIC,
+    EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
+    EMPLOYEE_ROLE_ASSIGNED_TOPIC,
+    EMPLOYEE_STATUS_CHANGED_TOPIC,
+    EMPLOYEE_UPDATED_TOPIC,
+    PROJECT_CREATED_TOPIC,
+    PROJECT_DELETED_TOPIC,
+    PROJECT_UPDATED_TOPIC,
+    ROLE_CREATED_TOPIC,
+    ROLE_DELETED_TOPIC,
+    ROLE_UPDATED_TOPIC,
+)
+from src.kafka.handlers import (
+    handle_employee_created,
+    handle_employee_project_assigned,
+    handle_employee_role_assigned,
+    handle_employee_status_changed,
+    handle_employee_updated,
+    handle_project_created,
+    handle_project_deleted,
+    handle_project_updated,
+    handle_role_created,
+    handle_role_deleted,
+    handle_role_updated,
+)
 
 logger = logging.getLogger(__name__)
 
+HANDLERS = {
+    "employee.created": handle_employee_created,
+    "employee.updated": handle_employee_updated,
+    "employee.role_assigned": handle_employee_role_assigned,
+    "employee.status_changed": handle_employee_status_changed,
+    "role.created": handle_role_created,
+    "role.updated": handle_role_updated,
+    "role.deleted": handle_role_deleted,
+    "project.created": handle_project_created,
+    "project.updated": handle_project_updated,
+    "project.deleted": handle_project_deleted,
+    "employee.project_assigned": handle_employee_project_assigned,
+}
 
-class EmployeeEventConsumer:
+TOPICS = [
+    EMPLOYEE_CREATED_TOPIC,
+    EMPLOYEE_UPDATED_TOPIC,
+    EMPLOYEE_ROLE_ASSIGNED_TOPIC,
+    EMPLOYEE_STATUS_CHANGED_TOPIC,
+    ROLE_CREATED_TOPIC,
+    ROLE_UPDATED_TOPIC,
+    ROLE_DELETED_TOPIC,
+    PROJECT_CREATED_TOPIC,
+    PROJECT_UPDATED_TOPIC,
+    PROJECT_DELETED_TOPIC,
+    EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
+]
+
+
+class KafkaEventConsumer:
     def __init__(self) -> None:
         self.bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
         self.group_id = os.getenv("KAFKA_GROUP_ID", "profile-service")
@@ -32,7 +77,7 @@ class EmployeeEventConsumer:
         while self._running:
             try:
                 self._consumer = AIOKafkaConsumer(
-                    EMPLOYEE_CREATED_TOPIC,
+                    *TOPICS,
                     bootstrap_servers=self.bootstrap_servers,
                     group_id=self.group_id,
                     enable_auto_commit=False,
@@ -70,81 +115,9 @@ class EmployeeEventConsumer:
             logger.info("Kafka consumer stopped")
 
     async def _handle_message(self, payload: dict[str, Any]) -> None:
-        if payload.get("event_type") != "employee.created":
-            return
-
-        employee_data = payload.get("employee") or {}
-        async with async_session_maker() as session:
-            await self._upsert_employee(session, employee_data)
-
-    async def _upsert_employee(
-        self,
-        session: AsyncSession,
-        employee_data: dict[str, Any],
-    ) -> None:
-        employee_id = UUID(str(employee_data["id"]))
-        roles = await self._get_or_create_roles(session, employee_data.get("roles", []))
-        status = await self._get_or_create_default_status(session)
-
-        result = await session.execute(select(Employee).where(Employee.id == employee_id))
-        employee = result.scalar_one_or_none()
-
-        if employee is None:
-            employee = Employee(
-                id=employee_id,
-                first_name="Не указано",
-                last_name="Не указано",
-                email=employee_data["email"],
-                hashed_password=employee_data.get("hashed_password", ""),
-                number=employee_data.get("employee_number"),
-                register_date=date.today(),
-                status_id=status.id,
-                roles=roles,
-            )
-            session.add(employee)
+        event_type = payload.get("event_type")
+        handler = HANDLERS.get(event_type)
+        if handler:
+            await handler(payload)
         else:
-            employee.email = employee_data["email"]
-            employee.hashed_password = employee_data.get("hashed_password", employee.hashed_password)
-            employee.number = employee_data.get("employee_number")
-            employee.roles = roles
-
-        await session.commit()
-
-    async def _get_or_create_roles(
-        self,
-        session: AsyncSession,
-        roles_data: list[dict[str, Any]],
-    ) -> list[Role]:
-        roles: list[Role] = []
-
-        for role_data in roles_data:
-            result = await session.execute(
-                select(Role).where(Role.name == role_data["name"])
-            )
-            role = result.scalar_one_or_none()
-
-            if role is None:
-                role = Role(
-                    name=role_data["name"],
-                    description=role_data.get("description"),
-                )
-                session.add(role)
-                await session.flush()
-
-            roles.append(role)
-
-        return roles
-
-    async def _get_or_create_default_status(self, session: AsyncSession) -> Status:
-        result = await session.execute(select(Status).where(Status.name == "Новый"))
-        status = result.scalar_one_or_none()
-
-        if status is None:
-            status = Status(
-                name="Новый",
-                description="Статус сотрудника после регистрации",
-            )
-            session.add(status)
-            await session.flush()
-
-        return status
+            logger.debug("Unhandled event type: %s", event_type)
