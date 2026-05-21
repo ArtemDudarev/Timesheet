@@ -1,7 +1,11 @@
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from fastapi import FastAPI
-from contextlib import asynccontextmanager
 
 from .database import engine
+from .kafka.consumer import KafkaEventConsumer
+from .kafka.producer import KafkaEventProducer
 from .models.base import Base
 
 # Импортируем ВСЕ модели для регистрации метаданных
@@ -26,7 +30,18 @@ from .routers.employee import router as employee_router
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    app.state.kafka_producer = KafkaEventProducer()
+    await app.state.kafka_producer.start()
+    app.state.kafka_consumer = KafkaEventConsumer()
+    app.state.kafka_consumer_task = asyncio.create_task(
+        app.state.kafka_consumer.start()
+    )
     yield
+    await app.state.kafka_producer.stop()
+    app.state.kafka_consumer_task.cancel()
+    await app.state.kafka_consumer.stop()
+    with suppress(asyncio.CancelledError):
+        await app.state.kafka_consumer_task
     await engine.dispose()
 
 app = FastAPI(title="Manager Service", lifespan=lifespan)

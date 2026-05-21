@@ -1,9 +1,10 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
+from src.kafka.events import publish_role_created, publish_role_updated
 from src.schemas.role import RoleCreate, RoleRead, RoleUpdate
 from src.services.role_service import RoleService
 
@@ -14,12 +15,15 @@ router = APIRouter(prefix="/role", tags=["Roles"])
 @router.post("/", response_model=RoleRead, status_code=status.HTTP_201_CREATED)
 async def create_role(
     role_in: RoleCreate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = RoleService(session)
     if await service.get_by_name(role_in.name):
         raise HTTPException(status_code=400, detail="Роль уже существует")
-    return await service.create(role_in)
+    role = await service.create(role_in)
+    await publish_role_created(request.app.state.kafka_producer, role)
+    return role
 
 
 @router.get("/", response_model=list[RoleRead])
@@ -46,6 +50,7 @@ async def get_role(
 async def update_role(
     role_id: uuid.UUID,
     role_in: RoleUpdate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
 ):
     service = RoleService(session)
@@ -58,4 +63,6 @@ async def update_role(
         if existing_role:
             raise HTTPException(status_code=400, detail="Роль уже существует")
 
-    return await service.update(role, role_in)
+    role = await service.update(role, role_in)
+    await publish_role_updated(request.app.state.kafka_producer, role)
+    return role
