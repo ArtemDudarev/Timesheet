@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import async_session_maker
 from src.models.employee import Employee
+from src.models.employee_project import AssignmentStatus, EmployeeProject
 from src.models.project import Project
+from src.models.project_role import ProjectRole
 from src.models.role import Role
 from src.models.status import Status
 
@@ -30,9 +32,12 @@ async def handle_employee_updated(payload: dict[str, Any]) -> None:
         if employee is None:
             logger.warning("employee.updated: employee %s not found", employee_id)
             return
-        for field in ("email", "first_name", "last_name", "phone", "address", "birthday", "image_url"):
+        for field in ("email", "first_name", "last_name", "phone", "address", "image_url"):
             if field in employee_data:
                 setattr(employee, field, employee_data[field])
+        if "birthday" in employee_data:
+            raw = employee_data["birthday"]
+            employee.birthday = date.fromisoformat(raw) if raw else None
         await session.commit()
 
 
@@ -102,21 +107,43 @@ async def handle_project_deleted(payload: dict[str, Any]) -> None:
 
 
 async def handle_employee_project_assigned(payload: dict[str, Any]) -> None:
+    assignment_id = UUID(str(payload["assignment_id"]))
     employee_id = UUID(str(payload["employee_id"]))
     project_id = UUID(str(payload["project_id"]))
+    role_data = payload.get("project_role") or {}
+    start_date_raw = payload.get("start_date")
+    end_date_raw = payload.get("end_date")
+    assignment_status = AssignmentStatus(payload["status"])
+
     async with async_session_maker() as session:
-        result = await session.execute(select(Employee).where(Employee.id == employee_id))
-        employee = result.scalar_one_or_none()
+        employee = await session.get(Employee, employee_id)
         if employee is None:
             logger.warning("employee.project_assigned: employee %s not found", employee_id)
             return
-        proj_result = await session.execute(select(Project).where(Project.id == project_id))
-        project = proj_result.scalar_one_or_none()
+
+        project = await session.get(Project, project_id)
         if project is None:
             logger.warning("employee.project_assigned: project %s not found", project_id)
             return
-        if project not in employee.projects:
-            employee.projects.append(project)
+
+        project_role = await _upsert_project_role(session, role_data)
+
+        existing = await session.get(EmployeeProject, assignment_id)
+        if existing is None:
+            assignment = EmployeeProject(
+                id=assignment_id,
+                employee_id=employee_id,
+                project_id=project_id,
+                project_role_id=project_role.id,
+                start_date=date.fromisoformat(start_date_raw) if start_date_raw else None,
+                end_date=date.fromisoformat(end_date_raw) if end_date_raw else None,
+                status=assignment_status,
+            )
+            session.add(assignment)
+        else:
+            existing.project_role_id = project_role.id
+            existing.status = assignment_status
+
         await session.commit()
 
 
@@ -166,15 +193,25 @@ async def _upsert_role(session: AsyncSession, role_data: dict[str, Any]) -> Role
 
 async def _upsert_project(session: AsyncSession, project_data: dict[str, Any]) -> Project:
     project_id = UUID(str(project_data["id"]))
+    start_raw = project_data.get("start_date")
+    end_raw = project_data.get("end_date")
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if project is None:
-        project = Project(id=project_id, name=project_data["name"], status=project_data["status"])
+        project = Project(
+            id=project_id,
+            name=project_data["name"],
+            status=project_data["status"],
+            start_date=date.fromisoformat(start_raw) if start_raw else None,
+            end_date=date.fromisoformat(end_raw) if end_raw else None,
+        )
         session.add(project)
         await session.flush()
     else:
         project.name = project_data["name"]
         project.status = project_data["status"]
+        project.start_date = date.fromisoformat(start_raw) if start_raw else None
+        project.end_date = date.fromisoformat(end_raw) if end_raw else None
     return project
 
 
@@ -190,6 +227,20 @@ async def _upsert_status(session: AsyncSession, status_data: dict[str, Any]) -> 
         status.name = status_data["name"]
         status.description = status_data.get("description")
     return status
+
+
+async def _upsert_project_role(session: AsyncSession, role_data: dict[str, Any]) -> ProjectRole:
+    role_id = UUID(str(role_data["id"]))
+    result = await session.execute(select(ProjectRole).where(ProjectRole.id == role_id))
+    role = result.scalar_one_or_none()
+    if role is None:
+        role = ProjectRole(id=role_id, name=role_data["name"], description=role_data.get("description"))
+        session.add(role)
+        await session.flush()
+    else:
+        role.name = role_data["name"]
+        role.description = role_data.get("description")
+    return role
 
 
 async def _get_or_create_default_status(session: AsyncSession) -> Status:

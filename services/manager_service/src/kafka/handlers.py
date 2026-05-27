@@ -29,9 +29,12 @@ async def handle_employee_updated(payload: dict[str, Any]) -> None:
         if employee is None:
             logger.warning("employee.updated: employee %s not found", employee_id)
             return
-        for field in ("email", "first_name", "last_name", "phone", "address", "birthday", "image_url"):
+        for field in ("email", "first_name", "last_name", "phone", "address", "image_url"):
             if field in employee_data:
                 setattr(employee, field, employee_data[field])
+        if "birthday" in employee_data:
+            raw = employee_data["birthday"]
+            employee.birthday = date.fromisoformat(raw) if raw else None
         await session.commit()
 
 

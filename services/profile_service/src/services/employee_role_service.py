@@ -18,10 +18,3 @@ class EmployeeRoleService:
         )
         return [dict(row) for row in result.mappings().all()]
 
-    async def get_by_role_id(self, role_id: uuid.UUID) -> list[dict]:
-        result = await self.session.execute(
-            select(employee_role).where(
-                employee_role.c.role_id == role_id
-            )
-        )
-        return [dict(row) for row in result.mappings().all()]

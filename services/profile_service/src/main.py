@@ -15,15 +15,10 @@ from .models.project import Project  # Добавлен импорт проек�
 from .models.employee import Employee
 from .models.employee_role import employee_role
 from .models.project_role import ProjectRole
-from .models.employee_project_role import employee_project_role_table
-from .models.employee_project import employee_project
+from .models.employee_project import EmployeeProject
 
 from .routers.status import router as status_router
-from .routers.project import router as project_router
-from .routers.role import router as role_router
 from .routers.employee_role import router as employee_role_router
-from .routers.project_role import router as project_role_router
-
 from .routers.employee import router as employee_router
 
 @asynccontextmanager
@@ -47,11 +42,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Profile Service", lifespan=lifespan)
 
 app.include_router(status_router)
-app.include_router(project_router)
-app.include_router(role_router)
 app.include_router(employee_role_router)
-app.include_router(project_role_router)
-
 app.include_router(employee_router)
 
 @app.get("/health")

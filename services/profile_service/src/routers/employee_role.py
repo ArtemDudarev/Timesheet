@@ -20,11 +20,4 @@ async def get_employee_roles_by_employee(
     return await service.get_by_employee_id(employee_id)
 
 
-@router.get("/role/{role_id}", response_model=list[EmployeeRoleRead])
-async def get_employee_roles_by_role(
-    role_id: uuid.UUID,
-    session: AsyncSession = Depends(get_async_session),
-):
-    service = EmployeeRoleService(session)
-    return await service.get_by_role_id(role_id)
 

@@ -8,8 +8,6 @@ from sqlalchemy import Date, ForeignKey, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.models.base import Base
-from src.models.employee_project import employee_project
-from src.models.employee_project_role import employee_project_role_table
 from src.models.employee_role import employee_role
 
 
@@ -47,16 +45,8 @@ class Employee(Base):
         lazy="selectin",
     )
 
-    projects: Mapped[List["Project"]] = relationship(
-        "Project",
-        secondary=employee_project,
-        back_populates="employees",
-        lazy="selectin",
-    )
-
-    project_roles: Mapped[List["ProjectRole"]] = relationship(
-        "ProjectRole",
-        secondary=employee_project_role_table,
-        back_populates="employees",
+    assignments: Mapped[List["EmployeeProject"]] = relationship(
+        "EmployeeProject",
+        back_populates="employee",
         lazy="selectin",
     )
