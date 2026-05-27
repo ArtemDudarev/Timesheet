@@ -11,14 +11,14 @@ from .models.base import Base
 # Импортируем ВСЕ модели для регистрации метаданных
 from .models.status import Status
 from .models.role import Role
-from .models.project import Project  # Добавлен импорт проекта
+from .models.project import Project
+from .models.user import User
+from .models.user_role import user_role
 from .models.employee import Employee
-from .models.employee_role import employee_role
 from .models.project_role import ProjectRole
 from .models.employee_project import EmployeeProject
 
 from .routers.status import router as status_router
-from .routers.employee_role import router as employee_role_router
 from .routers.employee import router as employee_router
 
 @asynccontextmanager
@@ -42,7 +42,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Profile Service", lifespan=lifespan)
 
 app.include_router(status_router)
-app.include_router(employee_role_router)
 app.include_router(employee_router)
 
 @app.get("/health")

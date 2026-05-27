@@ -20,7 +20,7 @@ from src.kafka.topics import (
     ROLE_UPDATED_TOPIC,
 )
 from src.kafka.handlers import (
-    handle_employee_created,
+    handle_user_created,
     handle_employee_project_assigned,
     handle_employee_role_assigned,
     handle_employee_status_changed,
@@ -36,7 +36,7 @@ from src.kafka.handlers import (
 logger = logging.getLogger(__name__)
 
 HANDLERS = {
-    "employee.created": handle_employee_created,
+    "user.created": handle_user_created,
     "employee.updated": handle_employee_updated,
     "employee.role_assigned": handle_employee_role_assigned,
     "employee.status_changed": handle_employee_status_changed,

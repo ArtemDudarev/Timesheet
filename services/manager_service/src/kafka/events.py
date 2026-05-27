@@ -17,20 +17,21 @@ from src.models.employee import Employee
 from src.models.employee_project import EmployeeProject
 from src.models.project import Project
 from src.models.role import Role
+from src.models.user import User
 
 
 async def publish_employee_role_assigned(
     producer: KafkaEventProducer,
-    employee: Employee,
+    user: User,
 ) -> None:
     await producer.publish(
         EMPLOYEE_ROLE_ASSIGNED_TOPIC,
         {
             "event_type": "employee.role_assigned",
-            "employee_id": employee.id,
+            "employee_id": user.id,
             "roles": [
                 {"id": role.id, "name": role.name, "description": role.description}
-                for role in employee.roles
+                for role in user.roles
             ],
         },
     )

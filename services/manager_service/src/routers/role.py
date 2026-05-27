@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
+from src.dependencies import require_roles
 from src.kafka.events import publish_role_created, publish_role_deleted, publish_role_updated
 from src.schemas.role import RoleCreate, RoleRead, RoleUpdate
 from src.services.role_service import RoleService
@@ -11,12 +12,15 @@ from src.services.role_service import RoleService
 
 router = APIRouter(prefix="/role", tags=["Roles"])
 
+_manager = Depends(require_roles("Менеджер"))
+
 
 @router.post("/", response_model=RoleRead, status_code=status.HTTP_201_CREATED)
 async def create_role(
     role_in: RoleCreate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = RoleService(session)
     if await service.get_by_name(role_in.name):
@@ -29,6 +33,7 @@ async def create_role(
 @router.get("/", response_model=list[RoleRead])
 async def get_roles(
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = RoleService(session)
     return await service.get_all()
@@ -38,6 +43,7 @@ async def get_roles(
 async def get_role(
     role_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = RoleService(session)
     role = await service.get_by_id(role_id)
@@ -52,6 +58,7 @@ async def update_role(
     role_in: RoleUpdate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = RoleService(session)
     role = await service.get_by_id(role_id)
@@ -80,6 +87,7 @@ async def delete_role(
     role_id: uuid.UUID,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = RoleService(session)
     role = await service.get_by_id(role_id)
