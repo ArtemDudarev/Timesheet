@@ -26,7 +26,12 @@ class ProjectService:
         return list(result.scalars().all())
 
     async def create_project(self, data: ProjectCreate) -> Project:
-        new_project = Project(name=data.name, status=data.status)
+        new_project = Project(
+            name=data.name,
+            status=data.status,
+            start_date=data.start_date,
+            end_date=data.end_date,
+        )
         try:
             self.session.add(new_project)
             await self.session.commit()
@@ -47,10 +52,9 @@ class ProjectService:
         if not project:
             return None
 
-        if data.name is not None:
-            project.name = data.name
-        if data.status is not None:
-            project.status = data.status
+        update_data = data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(project, field, value)
 
         try:
             await self.session.commit()

@@ -32,6 +32,17 @@
             "database": "manager_db",
             "username": "admin",
             "password": "secret_password"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "profile_db",
+            "database": "profile_db",
+            "username": "admin",
+            "password": "secret_password"
         }
     ],
     "python.testing.pytestArgs": [

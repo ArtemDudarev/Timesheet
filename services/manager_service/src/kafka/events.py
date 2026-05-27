@@ -14,6 +14,7 @@ from src.kafka.topics import (
     ROLE_UPDATED_TOPIC,
 )
 from src.models.employee import Employee
+from src.models.employee_project import EmployeeProject
 from src.models.project import Project
 from src.models.role import Role
 
@@ -100,7 +101,13 @@ async def publish_project_created(
         PROJECT_CREATED_TOPIC,
         {
             "event_type": "project.created",
-            "project": {"id": project.id, "name": project.name, "status": project.status},
+            "project": {
+                "id": project.id,
+                "name": project.name,
+                "status": project.status,
+                "start_date": project.start_date.isoformat() if project.start_date else None,
+                "end_date": project.end_date.isoformat() if project.end_date else None,
+            },
         },
     )
 
@@ -113,7 +120,13 @@ async def publish_project_updated(
         PROJECT_UPDATED_TOPIC,
         {
             "event_type": "project.updated",
-            "project": {"id": project.id, "name": project.name, "status": project.status},
+            "project": {
+                "id": project.id,
+                "name": project.name,
+                "status": project.status,
+                "start_date": project.start_date.isoformat() if project.start_date else None,
+                "end_date": project.end_date.isoformat() if project.end_date else None,
+            },
         },
     )
 
@@ -133,14 +146,22 @@ async def publish_project_deleted(
 
 async def publish_employee_project_assigned(
     producer: KafkaEventProducer,
-    employee_id: uuid.UUID,
-    project_id: uuid.UUID,
+    assignment: EmployeeProject,
 ) -> None:
     await producer.publish(
         EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
         {
             "event_type": "employee.project_assigned",
-            "employee_id": employee_id,
-            "project_id": project_id,
+            "assignment_id": assignment.id,
+            "employee_id": assignment.employee_id,
+            "project_id": assignment.project_id,
+            "project_role": {
+                "id": assignment.project_role.id,
+                "name": assignment.project_role.name,
+                "description": assignment.project_role.description,
+            },
+            "start_date": assignment.start_date.isoformat() if assignment.start_date else None,
+            "end_date": assignment.end_date.isoformat() if assignment.end_date else None,
+            "status": assignment.status,
         },
     )

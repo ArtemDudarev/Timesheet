@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from src.kafka.events import publish_role_created, publish_role_updated
+from src.kafka.events import publish_role_created, publish_role_deleted, publish_role_updated
 from src.schemas.role import RoleCreate, RoleRead, RoleUpdate
 from src.services.role_service import RoleService
 
@@ -66,3 +66,25 @@ async def update_role(
     role = await service.update(role, role_in)
     await publish_role_updated(request.app.state.kafka_producer, role)
     return role
+
+
+@router.delete(
+    "/{role_id}",
+    status_code=status.HTTP_200_OK,
+    responses={
+        404: {"description": "Роль не найдена"},
+        400: {"description": "Роль нельзя удалить, так как она назначена сотрудникам"},
+    },
+)
+async def delete_role(
+    role_id: uuid.UUID,
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    service = RoleService(session)
+    role = await service.get_by_id(role_id)
+    if role is None:
+        raise HTTPException(status_code=404, detail="Роль не найдена")
+    await service.delete(role)
+    await publish_role_deleted(request.app.state.kafka_producer, role_id)
+    return {"message": f"Роль '{role.name}' успешно удалена"}

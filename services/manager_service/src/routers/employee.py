@@ -9,14 +9,14 @@ from src.kafka.events import (
     publish_employee_role_assigned,
     publish_employee_status_changed,
 )
+from src.schemas.assignment import AssignmentCreate, AssignmentRead, AssignmentUpdate
 from src.schemas.employee import (
     EmployeeListRead,
-    EmployeeProjectRolesUpdate,
-    EmployeeProjectsUpdate,
     EmployeeRead,
     EmployeeRolesUpdate,
     EmployeeStatusUpdate,
 )
+from src.services.assignment_service import AssignmentService
 from src.services.employee_service import EmployeeService
 
 
@@ -66,36 +66,6 @@ async def update_employee_roles(
     return employee
 
 
-@router.patch("/{employee_id}/projects", response_model=EmployeeRead)
-async def update_employee_projects(
-    employee_id: uuid.UUID,
-    payload: EmployeeProjectsUpdate,
-    request: Request,
-    session: AsyncSession = Depends(get_async_session),
-):
-    service = EmployeeService(session)
-    employee = await get_employee_or_404(employee_id, service)
-    employee = await service.update_employee_projects(employee, payload.project_ids)
-    for project in employee.projects:
-        await publish_employee_project_assigned(
-            request.app.state.kafka_producer,
-            employee.id,
-            project.id,
-        )
-    return employee
-
-
-@router.patch("/{employee_id}/project-roles", response_model=EmployeeRead)
-async def update_employee_project_roles(
-    employee_id: uuid.UUID,
-    payload: EmployeeProjectRolesUpdate,
-    session: AsyncSession = Depends(get_async_session),
-):
-    service = EmployeeService(session)
-    employee = await get_employee_or_404(employee_id, service)
-    return await service.update_employee_project_roles(employee, payload.project_role_ids)
-
-
 @router.patch("/{employee_id}/status", response_model=EmployeeRead)
 async def update_employee_status(
     employee_id: uuid.UUID,
@@ -108,3 +78,54 @@ async def update_employee_status(
     employee = await service.update_employee_status(employee, payload.status_id)
     await publish_employee_status_changed(request.app.state.kafka_producer, employee)
     return employee
+
+
+@router.post("/{employee_id}/assignments", response_model=AssignmentRead, status_code=201)
+async def create_assignment(
+    employee_id: uuid.UUID,
+    payload: AssignmentCreate,
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    emp_service = EmployeeService(session)
+    await get_employee_or_404(employee_id, emp_service)
+
+    service = AssignmentService(session)
+    assignment = await service.create(employee_id, payload)
+    await publish_employee_project_assigned(request.app.state.kafka_producer, assignment)
+    return assignment
+
+
+@router.patch("/{employee_id}/assignments/{assignment_id}", response_model=AssignmentRead)
+async def update_assignment(
+    employee_id: uuid.UUID,
+    assignment_id: uuid.UUID,
+    payload: AssignmentUpdate,
+    session: AsyncSession = Depends(get_async_session),
+):
+    emp_service = EmployeeService(session)
+    await get_employee_or_404(employee_id, emp_service)
+
+    service = AssignmentService(session)
+    assignment = await service.get_by_id(assignment_id, employee_id)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Назначение не найдено")
+
+    return await service.update(assignment, payload)
+
+
+@router.delete("/{employee_id}/assignments/{assignment_id}", status_code=204)
+async def delete_assignment(
+    employee_id: uuid.UUID,
+    assignment_id: uuid.UUID,
+    session: AsyncSession = Depends(get_async_session),
+):
+    emp_service = EmployeeService(session)
+    await get_employee_or_404(employee_id, emp_service)
+
+    service = AssignmentService(session)
+    assignment = await service.get_by_id(assignment_id, employee_id)
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Назначение не найдено")
+
+    await service.delete(assignment)

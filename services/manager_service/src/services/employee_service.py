@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, Sequence, TypeVar
+from typing import List, Optional, TypeVar
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -7,8 +7,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.employee import Employee
-from src.models.project import Project
-from src.models.project_role import ProjectRole
 from src.models.role import Role
 from src.models.status import Status
 
@@ -19,9 +17,6 @@ ModelT = TypeVar("ModelT")
 class EmployeeService:
     def __init__(self, db: AsyncSession):
         self.db = db
-
-    async def get_all(self, skip: int = 0, limit: int = 100) -> List[Employee]:
-        return await self.get_all_with_related(skip=skip, limit=limit)
 
     async def get_all_with_related(self, skip: int = 0, limit: int = 100) -> List[Employee]:
         result = await self.db.execute(
@@ -44,30 +39,6 @@ class EmployeeService:
             Role,
             role_ids,
             "Одна или несколько ролей не найдены",
-        )
-        return await self._commit_employee_update(employee)
-
-    async def update_employee_projects(
-        self,
-        employee: Employee,
-        project_ids: list[uuid.UUID],
-    ) -> Employee:
-        employee.projects = await self._get_entities_by_ids_or_raise(
-            Project,
-            project_ids,
-            "Один или несколько проектов не найдены",
-        )
-        return await self._commit_employee_update(employee)
-
-    async def update_employee_project_roles(
-        self,
-        employee: Employee,
-        project_role_ids: list[uuid.UUID],
-    ) -> Employee:
-        employee.project_roles = await self._get_entities_by_ids_or_raise(
-            ProjectRole,
-            project_role_ids,
-            "Одна или несколько проектных ролей не найдены",
         )
         return await self._commit_employee_update(employee)
 
@@ -114,7 +85,7 @@ class EmployeeService:
             await self.db.commit()
             await self.db.refresh(
                 employee,
-                attribute_names=["roles", "status", "projects", "project_roles"],
+                attribute_names=["roles", "status", "assignments"],
             )
             return employee
         except IntegrityError:

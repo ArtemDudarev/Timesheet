@@ -57,6 +57,17 @@ class RoleService:
             await self.session.rollback()
             self._raise_role_integrity_error(exc, role.name)
 
+    async def delete(self, role: Role) -> None:
+        try:
+            await self.session.delete(role)
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Роль нельзя удалить, так как она назначена сотрудникам",
+            )
+
     def _raise_role_integrity_error(self, exc: IntegrityError, name: str) -> None:
         error_msg = str(exc.orig).lower()
 

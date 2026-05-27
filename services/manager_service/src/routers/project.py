@@ -26,15 +26,6 @@ async def create_project(
     return project
 
 
-@router.post("/create", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
-async def create_project_legacy(
-    payload: ProjectCreate,
-    request: Request,
-    session: AsyncSession = Depends(get_async_session),
-):
-    return await create_project(payload, request, session)
-
-
 @router.get("/", response_model=list[ProjectRead])
 async def get_all_projects(session: AsyncSession = Depends(get_async_session)):
     service = ProjectService(session)
@@ -65,7 +56,14 @@ async def update_project(
     return project
 
 
-@router.delete("/{project_id}", status_code=status.HTTP_200_OK)
+@router.delete(
+    "/{project_id}",
+    status_code=status.HTTP_200_OK,
+    responses={
+        404: {"description": "Проект не найден"},
+        400: {"description": "Проект нельзя удалить, так как он используется в назначениях"},
+    },
+)
 async def delete_project(
     project_id: UUID,
     request: Request,

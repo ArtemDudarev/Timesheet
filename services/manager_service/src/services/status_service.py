@@ -67,13 +67,3 @@ class StatusService:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Данные статуса конфликтуют с существующими записями",
         )
-
-
-async def get_all_statuses(session: AsyncSession):
-    service = StatusService(session)
-    return await service.get_all()
-
-
-async def create_status(session: AsyncSession, status_data: StatusCreate):
-    service = StatusService(session)
-    return await service.create(status_data)
