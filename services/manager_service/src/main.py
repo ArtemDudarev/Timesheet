@@ -3,17 +3,19 @@ from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 
-from .database import engine
+from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
 from .kafka.producer import KafkaEventProducer
 from .models.base import Base
+from .seed import seed_roles
 
 # Импортируем ВСЕ модели для регистрации метаданных
 from .models.status import Status
 from .models.role import Role
-from .models.project import Project  # Добавлен импорт проекта
+from .models.project import Project
+from .models.user import User
+from .models.user_role import user_role
 from .models.employee import Employee
-from .models.employee_role import employee_role
 from .models.project_role import ProjectRole
 from .models.employee_project import EmployeeProject
 
@@ -30,6 +32,7 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     app.state.kafka_producer = KafkaEventProducer()
     await app.state.kafka_producer.start()
+    await seed_roles(async_session_maker, app.state.kafka_producer)
     app.state.kafka_consumer = KafkaEventConsumer()
     app.state.kafka_consumer_task = asyncio.create_task(
         app.state.kafka_consumer.start()

@@ -4,17 +4,21 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
+from src.dependencies import require_roles
 from src.schemas.status import StatusCreate, StatusRead, StatusUpdate
 from src.services.status_service import StatusService
 
 
 router = APIRouter(prefix="/statuses", tags=["Statuses"])
 
+_manager = Depends(require_roles("Менеджер"))
+
 
 @router.post("/", response_model=StatusRead, status_code=status.HTTP_201_CREATED)
 async def add_status(
     status_data: StatusCreate,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = StatusService(session)
     if await service.get_by_name(status_data.name):
@@ -23,7 +27,10 @@ async def add_status(
 
 
 @router.get("/", response_model=list[StatusRead])
-async def read_statuses(session: AsyncSession = Depends(get_async_session)):
+async def read_statuses(
+    session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
+):
     service = StatusService(session)
     return await service.get_all()
 
@@ -32,6 +39,7 @@ async def read_statuses(session: AsyncSession = Depends(get_async_session)):
 async def get_status(
     status_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = StatusService(session)
     db_status = await service.get_by_id(status_id)
@@ -45,6 +53,7 @@ async def update_status(
     status_id: uuid.UUID,
     status_data: StatusUpdate,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = StatusService(session)
     db_status = await service.get_by_id(status_id)

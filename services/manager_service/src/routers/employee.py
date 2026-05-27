@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
+from src.dependencies import require_roles
 from src.kafka.events import (
     publish_employee_project_assigned,
     publish_employee_role_assigned,
@@ -22,6 +23,8 @@ from src.services.employee_service import EmployeeService
 
 router = APIRouter(prefix="/employees", tags=["employees"])
 
+_manager = Depends(require_roles("Менеджер"))
+
 
 async def get_employee_or_404(
     employee_id: uuid.UUID,
@@ -38,6 +41,7 @@ async def get_employees(
     skip: int = 0,
     limit: int = 100,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = EmployeeService(session)
     return await service.get_all_with_related(skip=skip, limit=limit)
@@ -47,6 +51,7 @@ async def get_employees(
 async def get_employee(
     employee_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = EmployeeService(session)
     return await get_employee_or_404(employee_id, service)
@@ -58,11 +63,12 @@ async def update_employee_roles(
     payload: EmployeeRolesUpdate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = EmployeeService(session)
     employee = await get_employee_or_404(employee_id, service)
     employee = await service.update_employee_roles(employee, payload.role_ids)
-    await publish_employee_role_assigned(request.app.state.kafka_producer, employee)
+    await publish_employee_role_assigned(request.app.state.kafka_producer, employee.user)
     return employee
 
 
@@ -72,6 +78,7 @@ async def update_employee_status(
     payload: EmployeeStatusUpdate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = EmployeeService(session)
     employee = await get_employee_or_404(employee_id, service)
@@ -86,6 +93,7 @@ async def create_assignment(
     payload: AssignmentCreate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     emp_service = EmployeeService(session)
     await get_employee_or_404(employee_id, emp_service)
@@ -102,6 +110,7 @@ async def update_assignment(
     assignment_id: uuid.UUID,
     payload: AssignmentUpdate,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     emp_service = EmployeeService(session)
     await get_employee_or_404(employee_id, emp_service)
@@ -119,6 +128,7 @@ async def delete_assignment(
     employee_id: uuid.UUID,
     assignment_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     emp_service = EmployeeService(session)
     await get_employee_or_404(employee_id, emp_service)

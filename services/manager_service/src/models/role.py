@@ -7,7 +7,7 @@ from sqlalchemy import String, Text
 from sqlalchemy import Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.models.employee_role import employee_role
+from src.models.user_role import user_role
 from src.models.base import Base
 
 
@@ -18,8 +18,8 @@ class Role(Base):
     name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    employees: Mapped[List["Employee"]] = relationship(
-        "Employee",
-        secondary=employee_role,
+    users: Mapped[List["User"]] = relationship(
+        "User",
+        secondary=user_role,
         back_populates="roles",
     )

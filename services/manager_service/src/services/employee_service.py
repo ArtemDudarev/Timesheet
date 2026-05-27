@@ -35,11 +35,12 @@ class EmployeeService:
         employee: Employee,
         role_ids: list[uuid.UUID],
     ) -> Employee:
-        employee.roles = await self._get_entities_by_ids_or_raise(
+        roles = await self._get_entities_by_ids_or_raise(
             Role,
             role_ids,
             "Одна или несколько ролей не найдены",
         )
+        employee.user.roles = roles
         return await self._commit_employee_update(employee)
 
     async def update_employee_status(
@@ -53,7 +54,6 @@ class EmployeeService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Статус не найден",
             )
-
         employee.status_id = status_id
         return await self._commit_employee_update(employee)
 
@@ -77,16 +77,13 @@ class EmployeeService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=detail,
             )
-
         return entities
 
     async def _commit_employee_update(self, employee: Employee) -> Employee:
         try:
             await self.db.commit()
-            await self.db.refresh(
-                employee,
-                attribute_names=["roles", "status", "assignments"],
-            )
+            await self.db.refresh(employee, attribute_names=["status", "assignments"])
+            await self.db.refresh(employee.user, attribute_names=["roles"])
             return employee
         except IntegrityError:
             await self.db.rollback()

@@ -3,87 +3,90 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.schemas.employee import EmployeeCreate, EmployeeRead, EmployeeLogin, EmployeeCreateSimple
-from src.services.employee_service import EmployeeService
 from src.database import get_async_session
-from src.kafka.events import publish_employee_created
+from src.dependencies import require_roles
+from src.kafka.events import publish_user_created
+from src.schemas.employee import TokenResponse, UserCreate, UserLogin, UserRead, UserRegister
+from src.security import create_access_token
+from src.services.employee_service import UserService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-@router.post("/register", response_model=EmployeeRead, status_code=status.HTTP_201_CREATED)
+
+@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register(
-    payload: EmployeeCreate, 
+    payload: UserCreate,
     request: Request,
-    session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
+    _: dict = Depends(require_roles("Менеджер")),
 ):
-    service = EmployeeService(session)
-    existing = await service.get_by_identity(payload.email)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Employee with this email or number already exists"
-        )
-    employee = await service.create_new_employee(payload)
+    service = UserService(session)
+    if await service.get_by_identity(payload.email):
+        raise HTTPException(status_code=400, detail="Пользователь с таким email уже существует")
+    user = await service.create_user(payload)
     try:
-        await publish_employee_created(request.app.state.kafka_producer, employee)
+        await publish_user_created(request.app.state.kafka_producer, user)
     except Exception:
-        logger.exception("Failed to publish employee.created event")
+        logger.exception("Failed to publish user.created event")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Сотрудник создан, но событие регистрации не отправлено в Kafka",
+            detail="Пользователь создан, но событие регистрации не отправлено в Kafka",
         )
-    return employee
+    return user
 
-@router.post("/register/public", response_model=EmployeeRead, status_code=status.HTTP_201_CREATED)
+
+@router.post("/register/public", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register_public(
-    payload: EmployeeCreateSimple, 
+    payload: UserRegister,
     request: Request,
-    session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
 ):
-    service = EmployeeService(session)
-    existing = await service.get_by_identity(payload.email)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Employee with this email already exists"
-        )
-    employee = await service.create_simple_employee(payload)
+    service = UserService(session)
+    if await service.get_by_identity(payload.email):
+        raise HTTPException(status_code=400, detail="Пользователь с таким email уже существует")
+    user = await service.register_user(payload)
     try:
-        await publish_employee_created(request.app.state.kafka_producer, employee)
+        await publish_user_created(request.app.state.kafka_producer, user)
     except Exception:
-        logger.exception("Failed to publish employee.created event")
+        logger.exception("Failed to publish user.created event")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Сотрудник создан, но событие регистрации не отправлено в Kafka",
+            detail="Пользователь создан, но событие регистрации не отправлено в Kafka",
         )
-    return employee
+    return user
 
-@router.post("/login")
+
+@router.post("/login", response_model=TokenResponse)
 async def login(
-    payload: EmployeeLogin, 
-    session: AsyncSession = Depends(get_async_session)
+    payload: UserLogin,
+    session: AsyncSession = Depends(get_async_session),
 ):
-    service = EmployeeService(session)
-    identity = payload.email or payload.employee_number
-    
+    service = UserService(session)
+    identity = payload.email or payload.number
     if not identity:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Email or Employee Number required"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Необходимо указать email или номер сотрудника",
         )
-        
-    employee = await service.get_by_identity(identity)
-    
-    if not employee or f"hashed_{payload.password}" != employee.hashed_password:
+
+    user = await service.get_by_identity(identity)
+    if not user or not service.verify_password(payload.password, user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверные учётные данные",
         )
-    
-    return {
-        "message": "Successfully logged in", 
-        "employee_id": employee.id,
-        "email": employee.email
-    }
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Учётная запись деактивирована",
+        )
+
+    token = create_access_token({
+        "sub": str(user.id),
+        "email": user.email,
+        "roles": [role.name for role in user.roles],
+        "is_active": user.is_active,
+    })
+    return TokenResponse(access_token=token)
