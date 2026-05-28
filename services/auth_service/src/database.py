@@ -2,20 +2,20 @@ import os
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-# Подтягиваем переменные, которые Docker передаст в контейнер
 DB_USER = os.getenv("DB_USER", "postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
-DB_NAME = "auth_db"  # Название базы из вашего compose
-DB_HOST = "auth_db"  # Имя сервиса/контейнера из вашего compose
-DB_PORT = "5432"     # Внутри сети Docker всегда стандартный порт 5432
+DB_NAME = "auth_db"
+DB_HOST = "auth_db"
+DB_PORT = "5432"
 
-# Собираем строку подключения для asyncpg
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+)
 
-# Создаем асинхронный движок
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True, # Включаем логирование SQL-запросов для отладки
+    echo=os.getenv("SQL_ECHO", "false").lower() == "true",
 )
 
 # Фабрика для создания сессий

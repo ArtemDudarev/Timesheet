@@ -12,7 +12,6 @@ async def publish_user_created(producer: KafkaEventProducer, user: User) -> None
                 "id": user.id,
                 "email": user.email,
                 "number": user.number,
-                "hashed_password": user.hashed_password,
                 "is_active": user.is_active,
                 "register_date": user.register_date.isoformat(),
                 "roles": [
