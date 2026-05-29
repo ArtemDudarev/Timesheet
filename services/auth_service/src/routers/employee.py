@@ -21,12 +21,21 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+
+@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register(
+    payload: UserCreate,
     payload: UserCreate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
     _: dict = Depends(require_roles("Менеджер")),
+    session: AsyncSession = Depends(get_async_session),
+    _: dict = Depends(require_roles("Менеджер")),
 ):
+    service = UserService(session)
+    if await service.get_by_identity(payload.email):
+        raise HTTPException(status_code=400, detail="Пользователь с таким email уже существует")
+    user = await service.create_user(payload)
     service = UserService(session)
     if await service.get_by_identity(payload.email):
         raise HTTPException(status_code=400, detail="Пользователь с таким email уже существует")
@@ -41,6 +50,8 @@ async def register(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Не удалось отправить событие регистрации. Попробуйте снова.",
         )
+    return user
+
     return user
 
 

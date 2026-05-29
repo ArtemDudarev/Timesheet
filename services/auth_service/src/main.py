@@ -10,14 +10,18 @@ from slowapi.errors import RateLimitExceeded
 from src.limiter import limiter
 
 from .database import engine, async_session_maker
+from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
 from .kafka.producer import KafkaEventProducer
 from src.models.base import Base
 from src.models.user import User
 from src.models.user_role import user_role
+from src.models.user import User
+from src.models.user_role import user_role
 from src.models.role import Role
 from src.models.refresh_token import RefreshToken
 from src.routers.employee import router as auth_router
+from src.seed import seed_roles
 from src.seed import seed_roles
 
 
@@ -25,6 +29,7 @@ from src.seed import seed_roles
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await seed_roles(async_session_maker)
     await seed_roles(async_session_maker)
     app.state.kafka_producer = KafkaEventProducer()
     await app.state.kafka_producer.start()
