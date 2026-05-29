@@ -3,8 +3,8 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 # Подтягиваем переменные из окружения (передаются Docker-ом)
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+DB_USER = os.getenv("DB_USER", "admin")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "secret_password")
 DB_NAME = "manager_db"
 DB_HOST = "manager_db"
 DB_PORT = "5432"
