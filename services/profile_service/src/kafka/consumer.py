@@ -86,27 +86,26 @@ class KafkaEventConsumer:
                 )
                 await self._consumer.start()
                 logger.info("Kafka consumer started: %s", self.bootstrap_servers)
-                break
+
+                async for message in self._consumer:
+                    try:
+                        await self._handle_message(message.value)
+                        await self._consumer.commit()
+                    except Exception:
+                        logger.exception("Failed to process Kafka message: %s", message.value)
+
+            except asyncio.CancelledError:
+                raise
             except Exception:
-                logger.exception("Kafka consumer start failed, retrying...")
+                logger.exception("Kafka consumer failed, reconnecting in 5s...")
                 await asyncio.sleep(5)
-
-        if not self._consumer:
-            return
-
-        try:
-            async for message in self._consumer:
-                try:
-                    await self._handle_message(message.value)
-                    await self._consumer.commit()
-                except Exception:
-                    logger.exception("Failed to process Kafka message: %s", message.value)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            logger.exception("Kafka consumer failed")
-        finally:
-            await self.stop()
+            finally:
+                if self._consumer:
+                    try:
+                        await self._consumer.stop()
+                    except Exception:
+                        pass
+                    self._consumer = None
 
     async def stop(self) -> None:
         self._running = False
