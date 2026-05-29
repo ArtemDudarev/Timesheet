@@ -54,6 +54,17 @@ class StatusService:
             await self.session.rollback()
             self._raise_status_integrity_error(exc, db_status.name)
 
+    async def delete(self, db_status: Status) -> None:
+        try:
+            await self.session.delete(db_status)
+            await self.session.commit()
+        except IntegrityError:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Статус нельзя удалить, так как он назначен сотрудникам",
+            )
+
     def _raise_status_integrity_error(self, exc: IntegrityError, name: str) -> None:
         error_msg = str(exc.orig).lower()
 

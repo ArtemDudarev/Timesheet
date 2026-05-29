@@ -6,18 +6,44 @@ from src.kafka.topics import (
     EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
     EMPLOYEE_ROLE_ASSIGNED_TOPIC,
     EMPLOYEE_STATUS_CHANGED_TOPIC,
+    EMPLOYEE_UPDATED_TOPIC,
     PROJECT_CREATED_TOPIC,
     PROJECT_DELETED_TOPIC,
     PROJECT_UPDATED_TOPIC,
     ROLE_CREATED_TOPIC,
     ROLE_DELETED_TOPIC,
     ROLE_UPDATED_TOPIC,
+    STATUS_CREATED_TOPIC,
+    STATUS_DELETED_TOPIC,
+    STATUS_UPDATED_TOPIC,
 )
 from src.models.employee import Employee
 from src.models.employee_project import EmployeeProject
 from src.models.project import Project
 from src.models.role import Role
+from src.models.status import Status
 from src.models.user import User
+
+
+async def publish_employee_updated(
+    producer: KafkaEventProducer,
+    employee: Employee,
+) -> None:
+    await producer.publish(
+        EMPLOYEE_UPDATED_TOPIC,
+        {
+            "event_type": "employee.updated",
+            "employee": {
+                "id": employee.id,
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "phone": employee.phone,
+                "address": employee.address,
+                "birthday": employee.birthday.isoformat() if employee.birthday else None,
+                "image_url": employee.image_url,
+            },
+        },
+    )
 
 
 async def publish_employee_role_assigned(
@@ -141,6 +167,45 @@ async def publish_project_deleted(
         {
             "event_type": "project.deleted",
             "project_id": project_id,
+        },
+    )
+
+
+async def publish_status_created(
+    producer: KafkaEventProducer,
+    status: Status,
+) -> None:
+    await producer.publish(
+        STATUS_CREATED_TOPIC,
+        {
+            "event_type": "status.created",
+            "status": {"id": status.id, "name": status.name, "description": status.description},
+        },
+    )
+
+
+async def publish_status_updated(
+    producer: KafkaEventProducer,
+    status: Status,
+) -> None:
+    await producer.publish(
+        STATUS_UPDATED_TOPIC,
+        {
+            "event_type": "status.updated",
+            "status": {"id": status.id, "name": status.name, "description": status.description},
+        },
+    )
+
+
+async def publish_status_deleted(
+    producer: KafkaEventProducer,
+    status_id: uuid.UUID,
+) -> None:
+    await producer.publish(
+        STATUS_DELETED_TOPIC,
+        {
+            "event_type": "status.deleted",
+            "status_id": status_id,
         },
     )
 

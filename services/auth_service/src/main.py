@@ -21,18 +21,17 @@ from src.models.user_role import user_role
 from src.models.role import Role
 from src.models.refresh_token import RefreshToken
 from src.routers.employee import router as auth_router
-from src.seed import seed_roles
-from src.seed import seed_roles
+from src.seed import seed_demo_users, seed_roles
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    await seed_roles(async_session_maker)
-    await seed_roles(async_session_maker)
     app.state.kafka_producer = KafkaEventProducer()
     await app.state.kafka_producer.start()
+    await seed_roles(async_session_maker)
+    await seed_demo_users(async_session_maker, app.state.kafka_producer)
     app.state.kafka_consumer = KafkaEventConsumer()
     app.state.kafka_consumer_task = asyncio.create_task(
         app.state.kafka_consumer.start()
