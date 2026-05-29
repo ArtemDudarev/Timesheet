@@ -20,7 +20,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserService:
-class UserService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -47,15 +46,8 @@ class UserService:
         )
         roles = list(roles_result.scalars().all())
         if len(roles) != len(set(data.role_ids)):
-    async def create_user(self, data: UserCreate) -> User:
-        roles_result = await self.session.execute(
-            select(Role).where(Role.id.in_(data.role_ids))
-        )
-        roles = list(roles_result.scalars().all())
-        if len(roles) != len(set(data.role_ids)):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Одна или несколько указанных ролей не найдены",
                 detail="Одна или несколько указанных ролей не найдены",
             )
 
@@ -181,16 +173,8 @@ class UserService:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Номер '{number}' уже используется",
-                    detail=f"Email '{email}' уже используется",
-                )
-            if "number" in error_msg:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Номер '{number}' уже используется",
                 )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Данные пользователя конфликтуют с существующими записями",
-                detail="Данные пользователя конфликтуют с существующими записями",
             )
-
