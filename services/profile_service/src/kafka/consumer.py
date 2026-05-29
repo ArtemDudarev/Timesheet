@@ -18,6 +18,9 @@ from src.kafka.topics import (
     ROLE_CREATED_TOPIC,
     ROLE_DELETED_TOPIC,
     ROLE_UPDATED_TOPIC,
+    STATUS_CREATED_TOPIC,
+    STATUS_DELETED_TOPIC,
+    STATUS_UPDATED_TOPIC,
 )
 from src.kafka.handlers import (
     handle_user_created,
@@ -31,6 +34,9 @@ from src.kafka.handlers import (
     handle_role_created,
     handle_role_deleted,
     handle_role_updated,
+    handle_status_created,
+    handle_status_deleted,
+    handle_status_updated,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,6 +53,9 @@ HANDLERS = {
     "project.updated": handle_project_updated,
     "project.deleted": handle_project_deleted,
     "employee.project_assigned": handle_employee_project_assigned,
+    "status.created": handle_status_created,
+    "status.updated": handle_status_updated,
+    "status.deleted": handle_status_deleted,
 }
 
 TOPICS = [
@@ -61,6 +70,9 @@ TOPICS = [
     PROJECT_UPDATED_TOPIC,
     PROJECT_DELETED_TOPIC,
     EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
+    STATUS_CREATED_TOPIC,
+    STATUS_UPDATED_TOPIC,
+    STATUS_DELETED_TOPIC,
 ]
 
 

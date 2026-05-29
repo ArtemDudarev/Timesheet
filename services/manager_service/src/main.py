@@ -7,7 +7,15 @@ from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
 from .kafka.producer import KafkaEventProducer
 from .models.base import Base
-from .seed import seed_roles
+from .seed import (
+    seed_demo_assignments,
+    seed_demo_employee_profiles,
+    seed_demo_employee_statuses,
+    seed_demo_projects,
+    seed_project_roles,
+    seed_roles,
+    seed_statuses,
+)
 
 # Импортируем ВСЕ модели для регистрации метаданных
 from .models.status import Status
@@ -33,6 +41,13 @@ async def lifespan(app: FastAPI):
     app.state.kafka_producer = KafkaEventProducer()
     await app.state.kafka_producer.start()
     await seed_roles(async_session_maker, app.state.kafka_producer)
+    await seed_statuses(async_session_maker, app.state.kafka_producer)
+    await seed_project_roles(async_session_maker)
+    await seed_demo_projects(async_session_maker, app.state.kafka_producer)
+    await seed_demo_employee_profiles(async_session_maker, app.state.kafka_producer)
+    await asyncio.sleep(3)
+    await seed_demo_assignments(async_session_maker, app.state.kafka_producer)
+    await seed_demo_employee_statuses(async_session_maker, app.state.kafka_producer)
     app.state.kafka_consumer = KafkaEventConsumer()
     app.state.kafka_consumer_task = asyncio.create_task(
         app.state.kafka_consumer.start()

@@ -72,6 +72,25 @@ async def handle_employee_status_changed(payload: dict[str, Any]) -> None:
         await session.commit()
 
 
+async def handle_status_created(payload: dict[str, Any]) -> None:
+    async with async_session_maker() as session:
+        await _upsert_status(session, payload.get("status") or {})
+        await session.commit()
+
+
+async def handle_status_updated(payload: dict[str, Any]) -> None:
+    async with async_session_maker() as session:
+        await _upsert_status(session, payload.get("status") or {})
+        await session.commit()
+
+
+async def handle_status_deleted(payload: dict[str, Any]) -> None:
+    status_id = UUID(str(payload["status_id"]))
+    async with async_session_maker() as session:
+        await session.execute(delete(Status).where(Status.id == status_id))
+        await session.commit()
+
+
 async def handle_role_created(payload: dict[str, Any]) -> None:
     async with async_session_maker() as session:
         await _upsert_role(session, payload.get("role") or {})
