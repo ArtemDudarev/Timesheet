@@ -8,14 +8,12 @@ from aiokafka import AIOKafkaConsumer
 
 from src.kafka.topics import (
     EMPLOYEE_ROLE_ASSIGNED_TOPIC,
-    EMPLOYEE_UPDATED_TOPIC,
     ROLE_CREATED_TOPIC,
     ROLE_DELETED_TOPIC,
     ROLE_UPDATED_TOPIC,
 )
 from src.kafka.handlers import (
-    handle_employee_role_assigned,
-    handle_employee_updated,
+    handle_user_role_assigned,
     handle_role_created,
     handle_role_deleted,
     handle_role_updated,
@@ -24,15 +22,13 @@ from src.kafka.handlers import (
 logger = logging.getLogger(__name__)
 
 HANDLERS = {
-    "employee.updated": handle_employee_updated,
-    "employee.role_assigned": handle_employee_role_assigned,
+    "employee.role_assigned": handle_user_role_assigned,
     "role.created": handle_role_created,
     "role.updated": handle_role_updated,
     "role.deleted": handle_role_deleted,
 }
 
 TOPICS = [
-    EMPLOYEE_UPDATED_TOPIC,
     EMPLOYEE_ROLE_ASSIGNED_TOPIC,
     ROLE_CREATED_TOPIC,
     ROLE_UPDATED_TOPIC,

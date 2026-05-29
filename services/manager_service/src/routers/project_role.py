@@ -4,17 +4,21 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_async_session
+from ..dependencies import require_roles
 from ..schemas.project_role import ProjectRoleCreate, ProjectRoleResponse, ProjectRoleUpdate
 from ..services.project_role import ProjectRoleService
 
 
 router = APIRouter(prefix="/project-roles", tags=["Project Roles"])
 
+_manager = Depends(require_roles("Менеджер"))
+
 
 @router.post("/", response_model=ProjectRoleResponse, status_code=status.HTTP_201_CREATED)
 async def create_role(
     role_data: ProjectRoleCreate,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectRoleService(session)
     return await service.create(role_data)
@@ -25,6 +29,7 @@ async def get_roles(
     skip: int = 0,
     limit: int = 100,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectRoleService(session)
     return await service.get_all(skip=skip, limit=limit)
@@ -34,6 +39,7 @@ async def get_roles(
 async def get_role(
     role_id: UUID,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectRoleService(session)
     role = await service.get_by_id(role_id)
@@ -47,6 +53,7 @@ async def update_role(
     role_id: UUID,
     role_data: ProjectRoleUpdate,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectRoleService(session)
     role = await service.update(role_id, role_data)
@@ -59,6 +66,7 @@ async def update_role(
 async def delete_role(
     role_id: UUID,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectRoleService(session)
     deleted = await service.delete(role_id)

@@ -4,11 +4,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
+from src.dependencies import require_roles
 from src.kafka.events import publish_project_created, publish_project_deleted, publish_project_updated
 from src.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
 from src.services.project_service import ProjectService
 
 router = APIRouter(prefix="/project", tags=["Project"])
+
+_manager = Depends(require_roles("Менеджер"))
 
 
 @router.post("/", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
@@ -16,6 +19,7 @@ async def create_project(
     payload: ProjectCreate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectService(session)
     existing_project = await service.get_by_name(payload.name)
@@ -27,13 +31,20 @@ async def create_project(
 
 
 @router.get("/", response_model=list[ProjectRead])
-async def get_all_projects(session: AsyncSession = Depends(get_async_session)):
+async def get_all_projects(
+    session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
+):
     service = ProjectService(session)
     return await service.get_all_projects()
 
 
 @router.get("/{project_id}", response_model=ProjectRead)
-async def get_project_by_id(project_id: UUID, session: AsyncSession = Depends(get_async_session)):
+async def get_project_by_id(
+    project_id: UUID,
+    session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
+):
     service = ProjectService(session)
     project = await service.get_by_id(project_id)
     if not project:
@@ -47,6 +58,7 @@ async def update_project(
     payload: ProjectUpdate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectService(session)
     project = await service.update_project(project_id, payload)
@@ -68,6 +80,7 @@ async def delete_project(
     project_id: UUID,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = _manager,
 ):
     service = ProjectService(session)
     deleted = await service.delete_project(project_id)

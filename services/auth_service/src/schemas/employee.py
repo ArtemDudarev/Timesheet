@@ -1,27 +1,41 @@
 import uuid
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import List
+from datetime import date
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr
+
 from .role import RoleRead
 
-class EmployeeBase(BaseModel):
-    email: EmailStr
-    employee_number: str
 
-class EmployeeCreate(EmployeeBase):
-    password: str
-    role_id: List[uuid.UUID]  # ИСПРАВЛЕНО: было List[int]
-
-class EmployeeRead(EmployeeBase):
+class UserRead(BaseModel):
     id: uuid.UUID
+    email: EmailStr
+    number: Optional[str] = None
+    is_active: bool
+    register_date: date
     roles: List[RoleRead]
 
     model_config = ConfigDict(from_attributes=True)
 
-class EmployeeLogin(BaseModel):
-    email: EmailStr | None = None
-    employee_number: str | None = None
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    number: str
     password: str
-    
-class EmployeeCreateSimple(BaseModel):
+    role_ids: List[uuid.UUID]
+
+
+class UserRegister(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserLogin(BaseModel):
+    email: Optional[EmailStr] = None
+    number: Optional[str] = None
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

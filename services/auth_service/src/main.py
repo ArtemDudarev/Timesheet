@@ -3,19 +3,22 @@ from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 
-from .database import engine
+from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
 from .kafka.producer import KafkaEventProducer
 from src.models.base import Base
-from src.models.employee import Employee
+from src.models.user import User
+from src.models.user_role import user_role
 from src.models.role import Role
 from src.routers.employee import router as auth_router
+from src.seed import seed_roles
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    await seed_roles(async_session_maker)
     app.state.kafka_producer = KafkaEventProducer()
     await app.state.kafka_producer.start()
     app.state.kafka_consumer = KafkaEventConsumer()
