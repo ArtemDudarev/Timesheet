@@ -1,7 +1,7 @@
 import random
 import secrets
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
@@ -66,15 +66,15 @@ class UserService:
         await self.session.execute(
             delete(RefreshToken).where(
                 RefreshToken.user_id == user_id,
-                RefreshToken.expires_at < datetime.now(timezone.utc),
+                RefreshToken.expires_at < datetime.utcnow(),
             )
         )
         token = secrets.token_urlsafe(32)
         self.session.add(RefreshToken(
             user_id=user_id,
             token=token,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-            created_at=datetime.now(timezone.utc),
+            expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+            created_at=datetime.utcnow(),
         ))
         await self.session.commit()
         return token
@@ -86,7 +86,7 @@ class UserService:
         rt = result.scalar_one_or_none()
         if rt is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Недействительный refresh token")
-        if rt.expires_at < datetime.now(timezone.utc):
+        if rt.expires_at < datetime.utcnow():
             await self.session.delete(rt)
             await self.session.commit()
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token истёк")
@@ -108,8 +108,8 @@ class UserService:
         self.session.add(RefreshToken(
             user_id=user.id,
             token=new_token,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-            created_at=datetime.now(timezone.utc),
+            expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+            created_at=datetime.utcnow(),
         ))
         await self.session.commit()
         return user, new_token
