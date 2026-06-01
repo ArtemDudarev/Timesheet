@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from src.models.employee_project import AssignmentStatus
+from .assignment_status import AssignmentStatusResponse
 from .project import ProjectRead
 from .project_role import ProjectRoleResponse
 
@@ -15,6 +15,7 @@ class AssignmentRead(BaseModel):
     project_role: ProjectRoleResponse
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    status: AssignmentStatus
+    status_id: uuid.UUID
+    assignment_status: AssignmentStatusResponse
 
     model_config = ConfigDict(from_attributes=True)

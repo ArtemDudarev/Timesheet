@@ -8,8 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import async_session_maker
 from src.models.employee import Employee
-from src.models.employee_project import AssignmentStatus, EmployeeProject
+from src.models.assignment_status import AssignmentStatus
+from src.models.employee_project import EmployeeProject
 from src.models.project import Project
+from src.models.project_status import ProjectStatus
 from src.models.project_role import ProjectRole
 from src.models.role import Role
 from src.models.status import Status
@@ -136,7 +138,7 @@ async def handle_employee_project_assigned(payload: dict[str, Any]) -> None:
     role_data = payload.get("project_role") or {}
     start_date_raw = payload.get("start_date")
     end_date_raw = payload.get("end_date")
-    assignment_status = AssignmentStatus(payload["status"])
+    status_id = UUID(str(payload["status_id"]))
 
     async with async_session_maker() as session:
         employee = await session.get(Employee, employee_id)
@@ -160,12 +162,12 @@ async def handle_employee_project_assigned(payload: dict[str, Any]) -> None:
                 project_role_id=project_role.id,
                 start_date=date.fromisoformat(start_date_raw) if start_date_raw else None,
                 end_date=date.fromisoformat(end_date_raw) if end_date_raw else None,
-                status=assignment_status,
+                status_id=status_id,
             )
             session.add(assignment)
         else:
             existing.project_role_id = project_role.id
-            existing.status = assignment_status
+            existing.status_id = status_id
 
         await session.commit()
 
@@ -223,12 +225,13 @@ async def _upsert_project(session: AsyncSession, project_data: dict[str, Any]) -
     project_id = UUID(str(project_data["id"]))
     start_raw = project_data.get("start_date")
     end_raw = project_data.get("end_date")
+    status_id = UUID(str(project_data["status_id"]))
     project = await session.get(Project, project_id)
     if project is None:
         project = Project(
             id=project_id,
             name=project_data["name"],
-            status=project_data["status"],
+            status_id=status_id,
             start_date=date.fromisoformat(start_raw) if start_raw else None,
             end_date=date.fromisoformat(end_raw) if end_raw else None,
         )
@@ -236,7 +239,7 @@ async def _upsert_project(session: AsyncSession, project_data: dict[str, Any]) -
         await session.flush()
     else:
         project.name = project_data["name"]
-        project.status = project_data["status"]
+        project.status_id = status_id
         project.start_date = date.fromisoformat(start_raw) if start_raw else None
         project.end_date = date.fromisoformat(end_raw) if end_raw else None
     return project

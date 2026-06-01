@@ -4,17 +4,6 @@
             "ssh": "Disabled",
             "previewLimit": 50,
             "server": "localhost",
-            "port": 5433,
-            "driver": "PostgreSQL",
-            "name": "Timesheet",
-            "database": "ts_db",
-            "username": "admin",
-            "password": "secret_password"
-        },
-        {
-            "ssh": "Disabled",
-            "previewLimit": 50,
-            "server": "localhost",
             "port": 5431,
             "driver": "PostgreSQL",
             "name": "auth_db",
@@ -41,6 +30,17 @@
             "driver": "PostgreSQL",
             "name": "profile_db",
             "database": "profile_db",
+            "username": "admin",
+            "password": "secret_password"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5434,
+            "driver": "PostgreSQL",
+            "name": "ts_db",
+            "database": "ts_db",
             "username": "admin",
             "password": "secret_password"
         }

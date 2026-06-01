@@ -15,13 +15,43 @@ from src.kafka.events import (
 )
 from src.kafka.producer import KafkaEventProducer
 from src.models.employee import Employee
-from src.models.employee_project import AssignmentStatus, EmployeeProject
-from src.models.project import Project, ProjectStatus
+from src.models.assignment_status import AssignmentStatus
+from src.models.employee_project import EmployeeProject
+from src.models.project import Project
+from src.models.project_status import ProjectStatus
 from src.models.project_role import ProjectRole
 from src.models.role import Role
 from src.models.status import Status
 from src.models.user import User
 from src.models.user_role import user_role as user_role_table
+
+# ── Статусы проектов ──────────────────────────────────────────────────────────
+PROJECT_STATUS_PLANNED_ID   = uuid.UUID("00000000-0000-0000-0001-000000000001")
+PROJECT_STATUS_ACTIVE_ID    = uuid.UUID("00000000-0000-0000-0001-000000000002")
+PROJECT_STATUS_ON_HOLD_ID   = uuid.UUID("00000000-0000-0000-0001-000000000003")
+PROJECT_STATUS_COMPLETED_ID = uuid.UUID("00000000-0000-0000-0001-000000000004")
+PROJECT_STATUS_ARCHIVED_ID  = uuid.UUID("00000000-0000-0000-0001-000000000005")
+
+SEED_PROJECT_STATUSES = [
+    {"id": PROJECT_STATUS_PLANNED_ID,   "code": "PLANNED",   "name": "Планируется",   "description": None},
+    {"id": PROJECT_STATUS_ACTIVE_ID,    "code": "ACTIVE",    "name": "Активный",      "description": None},
+    {"id": PROJECT_STATUS_ON_HOLD_ID,   "code": "ON_HOLD",   "name": "Приостановлен", "description": None},
+    {"id": PROJECT_STATUS_COMPLETED_ID, "code": "COMPLETED", "name": "Завершён",      "description": None},
+    {"id": PROJECT_STATUS_ARCHIVED_ID,  "code": "ARCHIVED",  "name": "Архивный",      "description": None},
+]
+
+# ── Статусы назначений ─────────────────────────────────────────────────────────
+ASSIGN_STATUS_REQUEST_ID  = uuid.UUID("00000000-0000-0000-0002-000000000001")
+ASSIGN_STATUS_ACTIVE_ID   = uuid.UUID("00000000-0000-0000-0002-000000000002")
+ASSIGN_STATUS_EXTENDED_ID = uuid.UUID("00000000-0000-0000-0002-000000000003")
+ASSIGN_STATUS_REMOVED_ID  = uuid.UUID("00000000-0000-0000-0002-000000000004")
+
+SEED_ASSIGNMENT_STATUSES = [
+    {"id": ASSIGN_STATUS_REQUEST_ID,  "code": "REQUEST",  "name": "Заявка",            "description": None},
+    {"id": ASSIGN_STATUS_ACTIVE_ID,   "code": "ACTIVE",   "name": "Привлечён",         "description": None},
+    {"id": ASSIGN_STATUS_EXTENDED_ID, "code": "EXTENDED", "name": "Продлён",           "description": None},
+    {"id": ASSIGN_STATUS_REMOVED_ID,  "code": "REMOVED",  "name": "Снят с проекта",    "description": None},
+]
 
 # ── Роли системы ──────────────────────────────────────────────────────────────
 ROLE_SOTRUDNIK_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
@@ -74,14 +104,14 @@ DEMO_PROJECTS = [
     {
         "id": PROJECT_PORTAL_ID,
         "name": "Внутренний портал",
-        "status": ProjectStatus.ACTIVE,
+        "status_id": PROJECT_STATUS_ACTIVE_ID,
         "start_date": date(2024, 1, 15),
         "end_date": None,
     },
     {
         "id": PROJECT_MOBILE_ID,
         "name": "Мобильное приложение",
-        "status": ProjectStatus.PLANNED,
+        "status_id": PROJECT_STATUS_PLANNED_ID,
         "start_date": date(2025, 6, 1),
         "end_date": None,
     },
@@ -124,7 +154,7 @@ DEMO_ASSIGNMENTS = [
         "project_role_id": PR_PM_ID,
         "start_date": date(2024, 1, 15),
         "end_date": None,
-        "status": AssignmentStatus.ACTIVE,
+        "status_id": ASSIGN_STATUS_ACTIVE_ID,
     },
     {
         "id": ASSIGN_EMPLOYEE_PORTAL_ID,
@@ -133,9 +163,27 @@ DEMO_ASSIGNMENTS = [
         "project_role_id": PR_DEVELOPER_ID,
         "start_date": date(2024, 2, 1),
         "end_date": None,
-        "status": AssignmentStatus.ACTIVE,
+        "status_id": ASSIGN_STATUS_ACTIVE_ID,
     },
 ]
+
+
+async def seed_project_statuses(session_maker: async_sessionmaker[AsyncSession]) -> None:
+    async with session_maker() as session:
+        for s in SEED_PROJECT_STATUSES:
+            existing = await session.get(ProjectStatus, s["id"])
+            if existing is None:
+                session.add(ProjectStatus(id=s["id"], code=s["code"], name=s["name"], description=s["description"]))
+        await session.commit()
+
+
+async def seed_assignment_statuses(session_maker: async_sessionmaker[AsyncSession]) -> None:
+    async with session_maker() as session:
+        for s in SEED_ASSIGNMENT_STATUSES:
+            existing = await session.get(AssignmentStatus, s["id"])
+            if existing is None:
+                session.add(AssignmentStatus(id=s["id"], code=s["code"], name=s["name"], description=s["description"]))
+        await session.commit()
 
 
 async def seed_roles(
@@ -201,12 +249,13 @@ async def seed_demo_projects(
                 project = Project(
                     id=p["id"],
                     name=p["name"],
-                    status=p["status"],
+                    status_id=p["status_id"],
                     start_date=p["start_date"],
                     end_date=p["end_date"],
                 )
                 session.add(project)
                 await session.flush()
+                await session.refresh(project, attribute_names=["project_status"])
                 await publish_project_created(producer, project)
         await session.commit()
 
@@ -282,11 +331,11 @@ async def seed_demo_assignments(
                 project_role_id=a["project_role_id"],
                 start_date=a["start_date"],
                 end_date=a["end_date"],
-                status=a["status"],
+                status_id=a["status_id"],
             )
             session.add(assignment)
             await session.flush()
-            await session.refresh(assignment, attribute_names=["project_role"])
+            await session.refresh(assignment, attribute_names=["project_role", "assignment_status"])
             await publish_employee_project_assigned(producer, assignment)
 
         await session.commit()
