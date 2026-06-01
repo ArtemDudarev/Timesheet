@@ -136,7 +136,8 @@ async def publish_project_created(
             "project": {
                 "id": project.id,
                 "name": project.name,
-                "status": project.status,
+                "status": project.project_status.name,
+                "status_id": str(project.status_id),
                 "start_date": project.start_date.isoformat() if project.start_date else None,
                 "end_date": project.end_date.isoformat() if project.end_date else None,
             },
@@ -155,7 +156,8 @@ async def publish_project_updated(
             "project": {
                 "id": project.id,
                 "name": project.name,
-                "status": project.status,
+                "status": project.project_status.name,
+                "status_id": str(project.status_id),
                 "start_date": project.start_date.isoformat() if project.start_date else None,
                 "end_date": project.end_date.isoformat() if project.end_date else None,
             },
@@ -233,7 +235,8 @@ async def publish_employee_project_assigned(
             },
             "start_date": assignment.start_date.isoformat() if assignment.start_date else None,
             "end_date": assignment.end_date.isoformat() if assignment.end_date else None,
-            "status": assignment.status,
+            "status": assignment.assignment_status.name,
+            "status_id": str(assignment.status_id),
         },
     )
 
