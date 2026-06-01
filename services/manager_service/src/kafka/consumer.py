@@ -29,10 +29,11 @@ TOPICS = [
 
 
 class KafkaEventConsumer:
-    def __init__(self) -> None:
+    def __init__(self, producer=None) -> None:
         self.bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
         self.group_id = os.getenv("KAFKA_GROUP_ID", "manager-service")
         self._consumer: AIOKafkaConsumer | None = None
+        self._producer = producer
         self._running = False
 
     async def start(self) -> None:
@@ -81,6 +82,6 @@ class KafkaEventConsumer:
         event_type = payload.get("event_type")
         handler = HANDLERS.get(event_type)
         if handler:
-            await handler(payload)
+            await handler(payload, self._producer)
         else:
             logger.debug("Unhandled event type: %s", event_type)

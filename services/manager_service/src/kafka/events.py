@@ -4,12 +4,16 @@ from typing import Any
 from src.kafka.producer import KafkaEventProducer
 from src.kafka.topics import (
     EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
+    EMPLOYEE_PROFILE_CREATED_TOPIC,
     EMPLOYEE_ROLE_ASSIGNED_TOPIC,
     EMPLOYEE_STATUS_CHANGED_TOPIC,
     EMPLOYEE_UPDATED_TOPIC,
     PROJECT_CREATED_TOPIC,
     PROJECT_DELETED_TOPIC,
     PROJECT_UPDATED_TOPIC,
+    PROJECT_ROLE_CREATED_TOPIC,
+    PROJECT_ROLE_DELETED_TOPIC,
+    PROJECT_ROLE_UPDATED_TOPIC,
     ROLE_CREATED_TOPIC,
     ROLE_DELETED_TOPIC,
     ROLE_UPDATED_TOPIC,
@@ -20,6 +24,7 @@ from src.kafka.topics import (
 from src.models.employee import Employee
 from src.models.employee_project import EmployeeProject
 from src.models.project import Project
+from src.models.project_role import ProjectRole
 from src.models.role import Role
 from src.models.status import Status
 from src.models.user import User
@@ -229,5 +234,73 @@ async def publish_employee_project_assigned(
             "start_date": assignment.start_date.isoformat() if assignment.start_date else None,
             "end_date": assignment.end_date.isoformat() if assignment.end_date else None,
             "status": assignment.status,
+        },
+    )
+
+
+async def publish_employee_profile_created(
+    producer: KafkaEventProducer,
+    employee: Employee,
+    user: User,
+) -> None:
+    await producer.publish(
+        EMPLOYEE_PROFILE_CREATED_TOPIC,
+        {
+            "event_type": "employee.profile_created",
+            "employee": {
+                "id": str(employee.id),
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "email": user.email,
+                "number": user.number,
+                "register_date": user.register_date.isoformat() if user.register_date else None,
+            },
+        },
+    )
+
+
+async def publish_project_role_created(
+    producer: KafkaEventProducer,
+    project_role: ProjectRole,
+) -> None:
+    await producer.publish(
+        PROJECT_ROLE_CREATED_TOPIC,
+        {
+            "event_type": "project_role.created",
+            "project_role": {
+                "id": str(project_role.id),
+                "name": project_role.name,
+                "description": project_role.description,
+            },
+        },
+    )
+
+
+async def publish_project_role_updated(
+    producer: KafkaEventProducer,
+    project_role: ProjectRole,
+) -> None:
+    await producer.publish(
+        PROJECT_ROLE_UPDATED_TOPIC,
+        {
+            "event_type": "project_role.updated",
+            "project_role": {
+                "id": str(project_role.id),
+                "name": project_role.name,
+                "description": project_role.description,
+            },
+        },
+    )
+
+
+async def publish_project_role_deleted(
+    producer: KafkaEventProducer,
+    project_role_id: uuid.UUID,
+) -> None:
+    await producer.publish(
+        PROJECT_ROLE_DELETED_TOPIC,
+        {
+            "event_type": "project_role.deleted",
+            "project_role_id": str(project_role_id),
         },
     )

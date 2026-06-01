@@ -1,10 +1,15 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_async_session
 from ..dependencies import require_roles
+from ..kafka.events import (
+    publish_project_role_created,
+    publish_project_role_deleted,
+    publish_project_role_updated,
+)
 from ..schemas.project_role import ProjectRoleCreate, ProjectRoleResponse, ProjectRoleUpdate
 from ..services.project_role import ProjectRoleService
 
@@ -17,11 +22,14 @@ _manager = Depends(require_roles("Менеджер"))
 @router.post("/", response_model=ProjectRoleResponse, status_code=status.HTTP_201_CREATED)
 async def create_role(
     role_data: ProjectRoleCreate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
     _: dict = _manager,
 ):
     service = ProjectRoleService(session)
-    return await service.create(role_data)
+    role = await service.create(role_data)
+    await publish_project_role_created(request.app.state.kafka_producer, role)
+    return role
 
 
 @router.get("/", response_model=list[ProjectRoleResponse])
@@ -52,6 +60,7 @@ async def get_role(
 async def update_role(
     role_id: UUID,
     role_data: ProjectRoleUpdate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
     _: dict = _manager,
 ):
@@ -59,12 +68,14 @@ async def update_role(
     role = await service.update(role_id, role_data)
     if not role:
         raise HTTPException(status_code=404, detail="Проектная роль не найдена")
+    await publish_project_role_updated(request.app.state.kafka_producer, role)
     return role
 
 
 @router.delete("/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_role(
     role_id: UUID,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
     _: dict = _manager,
 ):
@@ -72,3 +83,4 @@ async def delete_role(
     deleted = await service.delete(role_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Проектная роль не найдена")
+    await publish_project_role_deleted(request.app.state.kafka_producer, role_id)

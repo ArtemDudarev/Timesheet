@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
     await asyncio.sleep(3)
     await seed_demo_assignments(async_session_maker, app.state.kafka_producer)
     await seed_demo_employee_statuses(async_session_maker, app.state.kafka_producer)
-    app.state.kafka_consumer = KafkaEventConsumer()
+    app.state.kafka_consumer = KafkaEventConsumer(producer=app.state.kafka_producer)
     app.state.kafka_consumer_task = asyncio.create_task(
         app.state.kafka_consumer.start()
     )
