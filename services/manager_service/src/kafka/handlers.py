@@ -7,6 +7,7 @@ from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import async_session_maker
+from src.kafka.events import publish_employee_profile_created
 from src.models.employee import Employee
 from src.models.role import Role
 from src.models.status import Status
@@ -16,17 +17,19 @@ from src.models.user_role import user_role as user_role_table
 logger = logging.getLogger(__name__)
 
 
-async def handle_user_created(payload: dict[str, Any]) -> None:
+async def handle_user_created(payload: dict[str, Any], producer=None) -> None:
     user_data = payload.get("user") or {}
     async with async_session_maker() as session:
         user = await _upsert_user(session, user_data)
         roles = [await _upsert_role(session, r) for r in user_data.get("roles", [])]
         await _set_user_roles(session, user.id, roles)
-        await _upsert_employee_profile(session, user.id)
+        employee = await _upsert_employee_profile(session, user.id)
         await session.commit()
+    if producer:
+        await publish_employee_profile_created(producer, employee, user)
 
 
-async def handle_employee_updated(payload: dict[str, Any]) -> None:
+async def handle_employee_updated(payload: dict[str, Any], producer=None) -> None:
     employee_data = payload.get("employee") or {}
     employee_id = UUID(str(employee_data["id"]))
     async with async_session_maker() as session:
