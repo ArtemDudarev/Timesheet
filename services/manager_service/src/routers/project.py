@@ -9,7 +9,7 @@ from src.kafka.events import publish_project_created, publish_project_deleted, p
 from src.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
 from src.services.project_service import ProjectService
 
-router = APIRouter(prefix="/project", tags=["Project"])
+router = APIRouter(prefix="/projects", tags=["Projects"])
 
 _manager = Depends(require_roles("Менеджер"))
 

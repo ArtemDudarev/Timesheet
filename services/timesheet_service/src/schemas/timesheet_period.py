@@ -16,7 +16,6 @@ class EmployeeShort(BaseModel):
 
 class TimesheetPeriodResponse(BaseModel):
     id: uuid.UUID
-    employee_id: uuid.UUID
     employee: EmployeeShort
     year: int
     month: int

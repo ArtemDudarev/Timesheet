@@ -10,7 +10,7 @@ from src.schemas.role import RoleCreate, RoleRead, RoleUpdate
 from src.services.role_service import RoleService
 
 
-router = APIRouter(prefix="/role", tags=["Roles"])
+router = APIRouter(prefix="/roles", tags=["Roles"])
 
 _manager = Depends(require_roles("Менеджер"))
 
