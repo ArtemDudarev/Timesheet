@@ -1,0 +1,269 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Database Schema" id="db-schema">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2500" pageHeight="1800" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ═══════════════════════════════════════════════════════
+             AUTH SERVICE
+        ═══════════════════════════════════════════════════════ -->
+        <mxCell id="bg_auth" value="Auth Service" style="fillColor=#EDF4FF;strokeColor=#6c8ebf;rounded=1;arcSize=1;fontSize=16;fontStyle=1;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="10" y="10" width="590" height="470" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth_user" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#6c8ebf'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;user&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;email: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;number: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;hashed_password: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;is_active: BOOL&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;must_change_password: BOOL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;register_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="70" width="260" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#6c8ebf'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="340" y="70" width="230" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth_user_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#6c8ebf'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;user_role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;FK&lt;/td&gt;&lt;td&gt;user_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;role_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="340" y="200" width="230" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth_refresh_token" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#6c8ebf'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;refresh_token&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;user_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;token: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;expires_at: DATETIME&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;created_at: DATETIME&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="295" width="260" height="136" as="geometry"/>
+        </mxCell>
+
+        <!-- Auth edges -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;endArrow=open;endFill=0;" edge="1" source="auth_user_role" target="auth_user" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;endArrow=open;endFill=0;" edge="1" source="auth_user_role" target="auth_role" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6c8ebf;endArrow=open;endFill=0;" edge="1" source="auth_refresh_token" target="auth_user" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════
+             MANAGER SERVICE
+        ═══════════════════════════════════════════════════════ -->
+        <mxCell id="bg_mgr" value="Manager Service" style="fillColor=#EDF7ED;strokeColor=#82b366;rounded=1;arcSize=1;fontSize=16;fontStyle=1;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="630" y="10" width="1130" height="680" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_user" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;user&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;email: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;number: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;is_active: BOOL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;register_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="650" y="70" width="230" height="136" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="650" y="260" width="230" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_user_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;user_role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;FK&lt;/td&gt;&lt;td&gt;user_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;role_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="920" y="70" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_status" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;status&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="920" y="190" width="210" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_employee" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;employee&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK,FK&lt;/td&gt;&lt;td&gt;id → user.id&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;first_name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;last_name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;phone: VARCHAR(30)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;address: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;birthday: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;image_url: VARCHAR(500)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;status_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="920" y="335" width="240" height="224" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_project_status" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project_status&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;code: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="70" width="230" height="114" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_project" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;status_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;start_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;end_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="240" width="230" height="136" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_employee_project" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;employee_project&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;employee_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;project_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;project_role_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;status_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;start_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;end_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="440" width="240" height="202" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_project_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project_role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="70" width="230" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="mgr_assignment_status" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#82b366'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;assignment_status&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;code: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="230" width="230" height="114" as="geometry"/>
+        </mxCell>
+
+        <!-- Manager edges -->
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_user_role" target="mgr_user" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_user_role" target="mgr_role" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_employee" target="mgr_user" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_employee" target="mgr_status" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_project" target="mgr_project_status" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_employee_project" target="mgr_employee" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_employee_project" target="mgr_project" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_employee_project" target="mgr_project_role" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#82b366;endArrow=open;endFill=0;" edge="1" source="mgr_employee_project" target="mgr_assignment_status" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════
+             PROFILE SERVICE
+        ═══════════════════════════════════════════════════════ -->
+        <mxCell id="bg_prof" value="Profile Service" style="fillColor=#FFF9ED;strokeColor=#d6b656;rounded=1;arcSize=1;fontSize=16;fontStyle=1;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="10" y="730" width="1130" height="700" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_user" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;user&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;email: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;number: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;is_active: BOOL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;register_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="800" width="230" height="136" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1000" width="230" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_user_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;user_role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;FK&lt;/td&gt;&lt;td&gt;user_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;role_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="300" y="800" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_status" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;status&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="300" y="930" width="210" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_employee" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;employee&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK,FK&lt;/td&gt;&lt;td&gt;id → user.id&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;first_name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;last_name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;phone: VARCHAR(30)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;address: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;birthday: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;image_url: VARCHAR(500)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;status_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1080" width="240" height="224" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_project_status" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project_status&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;code: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="580" y="800" width="230" height="114" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_project" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;status_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;start_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;end_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="580" y="975" width="230" height="136" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_employee_project" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;employee_project&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;employee_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;project_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;project_role_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;status_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;start_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;end_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1175" width="240" height="202" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_project_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project_role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="860" y="800" width="230" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prof_assignment_status" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#d6b656'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;assignment_status&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;code: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#d6b656;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="860" y="960" width="230" height="114" as="geometry"/>
+        </mxCell>
+
+        <!-- Profile edges -->
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_user_role" target="prof_user" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_user_role" target="prof_role" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_employee" target="prof_user" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_employee" target="prof_status" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_project" target="prof_project_status" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_employee_project" target="prof_employee" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_employee_project" target="prof_project" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_employee_project" target="prof_project_role" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d6b656;endArrow=open;endFill=0;" edge="1" source="prof_employee_project" target="prof_assignment_status" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════════
+             TIMESHEET SERVICE
+        ═══════════════════════════════════════════════════════ -->
+        <mxCell id="bg_ts" value="Timesheet Service" style="fillColor=#F5EDF9;strokeColor=#9673a6;rounded=1;arcSize=1;fontSize=16;fontStyle=1;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="730" width="1290" height="780" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_employee" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;employee&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;first_name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;last_name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;email: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;number: VARCHAR(20)&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="800" width="240" height="136" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_project" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="800" width="220" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_project_role" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;project_role&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1750" y="800" width="220" height="92" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_employee_project" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;employee_project&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;employee_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;project_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;project_role_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;start_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;end_date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;status: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="930" width="240" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_entry_type_ref" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;entry_type_ref&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;code: VARCHAR(50)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1000" width="240" height="114" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_timesheet_period" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;timesheet_period&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;employee_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;year: INT&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;month: INT&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;status: ENUM&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;closed_by: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;closed_at: DATETIME&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="1185" width="240" height="202" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_time_entry" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;time_entry&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;timesheet_period_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;employee_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK?&lt;/td&gt;&lt;td&gt;employee_project_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;type_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;date_from: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;date_to: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;spend_time: DECIMAL(5,2)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;task_name: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;task_num: VARCHAR(100)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;comment: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;created_at: DATETIME&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;updated_at: DATETIME&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="1175" width="265" height="312" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_overtime_approval" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;overtime_approval&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;FK&lt;/td&gt;&lt;td&gt;time_entry_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;approver_id: UUID&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;status: ENUM&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;comment: TEXT&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;created_at: DATETIME&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;resolved_at: DATETIME&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1820" y="1175" width="240" height="202" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ts_production_calendar" value="&lt;table width='100%' cellspacing='0' cellpadding='2'&gt;&lt;tr bgcolor='#9673a6'&gt;&lt;td colspan='2' align='center'&gt;&lt;font color='white'&gt;&lt;b&gt;production_calendar&lt;/b&gt;&lt;/font&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td width='40'&gt;PK&lt;/td&gt;&lt;td&gt;date: DATE&lt;/td&gt;&lt;/tr&gt;&lt;tr bgcolor='#f5f5f5'&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;day_type: ENUM&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;description: VARCHAR(255)&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" style="text;html=1;strokeColor=#9673a6;fillColor=#ffffff;align=left;verticalAlign=top;overflow=hidden;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1820" y="940" width="240" height="92" as="geometry"/>
+        </mxCell>
+
+        <!-- Timesheet edges -->
+        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_employee_project" target="ts_employee" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_employee_project" target="ts_project" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_employee_project" target="ts_project_role" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_timesheet_period" target="ts_employee" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_time_entry" target="ts_timesheet_period" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_time_entry" target="ts_employee" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_time_entry" target="ts_employee_project" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_time_entry" target="ts_entry_type_ref" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#9673a6;endArrow=open;endFill=0;" edge="1" source="ts_overtime_approval" target="ts_time_entry" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

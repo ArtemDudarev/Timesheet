@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.project import Project
+from src.models.project_status import ProjectStatus
 from src.schemas.project import ProjectCreate, ProjectUpdate
 
 class ProjectService:
@@ -26,16 +27,17 @@ class ProjectService:
         return list(result.scalars().all())
 
     async def create_project(self, data: ProjectCreate) -> Project:
+        await self._validate_status(data.status_id)
         new_project = Project(
             name=data.name,
-            status=data.status,
+            status_id=data.status_id,
             start_date=data.start_date,
             end_date=data.end_date,
         )
         try:
             self.session.add(new_project)
             await self.session.commit()
-            await self.session.refresh(new_project)
+            await self.session.refresh(new_project, attribute_names=["project_status"])
             return new_project
         except IntegrityError as e:
             await self.session.rollback()
@@ -53,16 +55,26 @@ class ProjectService:
             return None
 
         update_data = data.model_dump(exclude_unset=True)
+        if "status_id" in update_data:
+            await self._validate_status(update_data["status_id"])
         for field, value in update_data.items():
             setattr(project, field, value)
 
         try:
             await self.session.commit()
-            await self.session.refresh(project)
+            await self.session.refresh(project, attribute_names=["project_status"])
             return project
         except IntegrityError:
             await self.session.rollback()
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ошибка при обновлении проекта")
+
+    async def _validate_status(self, status_id: UUID) -> None:
+        s = await self.session.get(ProjectStatus, status_id)
+        if not s:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Статус проекта не найден",
+            )
 
     async def delete_project(self, project_id: UUID) -> bool:
         project = await self.get_by_id(project_id)

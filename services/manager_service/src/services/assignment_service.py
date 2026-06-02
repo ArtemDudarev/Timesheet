@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.models.assignment_status import AssignmentStatus
 from src.models.employee_project import EmployeeProject
 from src.models.project import Project
 from src.models.project_role import ProjectRole
@@ -35,6 +36,7 @@ class AssignmentService:
     ) -> EmployeeProject:
         await self._validate_project(data.project_id)
         await self._validate_role(data.project_role_id)
+        await self._validate_status(data.status_id)
 
         assignment = EmployeeProject(
             employee_id=employee_id,
@@ -42,11 +44,11 @@ class AssignmentService:
             project_role_id=data.project_role_id,
             start_date=data.start_date,
             end_date=data.end_date,
-            status=data.status,
+            status_id=data.status_id,
         )
         self.db.add(assignment)
         await self.db.commit()
-        await self.db.refresh(assignment, attribute_names=["project", "project_role"])
+        await self.db.refresh(assignment, attribute_names=["project", "project_role", "assignment_status"])
         return assignment
 
     async def update(
@@ -58,12 +60,14 @@ class AssignmentService:
 
         if "project_role_id" in update_data:
             await self._validate_role(update_data["project_role_id"])
+        if "status_id" in update_data:
+            await self._validate_status(update_data["status_id"])
 
         for field, value in update_data.items():
             setattr(assignment, field, value)
 
         await self.db.commit()
-        await self.db.refresh(assignment, attribute_names=["project", "project_role"])
+        await self.db.refresh(assignment, attribute_names=["project", "project_role", "assignment_status"])
         return assignment
 
     async def delete(self, assignment: EmployeeProject) -> None:
@@ -84,4 +88,12 @@ class AssignmentService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Проектная роль не найдена",
+            )
+
+    async def _validate_status(self, status_id: uuid.UUID) -> None:
+        s = await self.db.get(AssignmentStatus, status_id)
+        if not s:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Статус назначения не найден",
             )
