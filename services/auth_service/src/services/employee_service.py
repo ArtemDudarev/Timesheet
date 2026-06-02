@@ -100,8 +100,6 @@ class UserService:
             await self.session.delete(rt)
             await self.session.commit()
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Учётная запись деактивирована")
-        await self.session.refresh(user, attribute_names=["roles"])
-
         await self.session.delete(rt)
 
         new_token = secrets.token_urlsafe(32)
@@ -112,6 +110,7 @@ class UserService:
             created_at=datetime.utcnow(),
         ))
         await self.session.commit()
+        await self.session.refresh(user, attribute_names=["roles"])
         return user, new_token
 
     async def revoke_refresh_token(self, token: str) -> None:

@@ -63,10 +63,7 @@ class TimeEntryUpdate(BaseModel):
 class TimeEntryResponse(BaseModel):
     id: uuid.UUID
     timesheet_period_id: uuid.UUID
-    employee_id: uuid.UUID
-    type_id: uuid.UUID
     entry_type: EntryTypeRefResponse
-    employee_project_id: Optional[uuid.UUID]
     employee_project: Optional[AssignmentShort]
     date_from: date
     date_to: date

@@ -21,7 +21,7 @@ from src.services.assignment_service import AssignmentService
 from src.services.employee_service import EmployeeService
 
 
-router = APIRouter(prefix="/employees", tags=["employees"])
+router = APIRouter(prefix="/employees", tags=["Employees"])
 
 _manager = Depends(require_roles("Менеджер"))
 
@@ -87,7 +87,7 @@ async def update_employee_status(
     return employee
 
 
-@router.post("/{employee_id}/assignments", response_model=AssignmentRead, status_code=201)
+@router.post("/{employee_id}/assignments", response_model=AssignmentRead, status_code=201, tags=["Assignments"])
 async def create_assignment(
     employee_id: uuid.UUID,
     payload: AssignmentCreate,
@@ -104,7 +104,7 @@ async def create_assignment(
     return assignment
 
 
-@router.patch("/{employee_id}/assignments/{assignment_id}", response_model=AssignmentRead)
+@router.patch("/{employee_id}/assignments/{assignment_id}", response_model=AssignmentRead, tags=["Assignments"])
 async def update_assignment(
     employee_id: uuid.UUID,
     assignment_id: uuid.UUID,
@@ -123,7 +123,7 @@ async def update_assignment(
     return await service.update(assignment, payload)
 
 
-@router.delete("/{employee_id}/assignments/{assignment_id}", status_code=204)
+@router.delete("/{employee_id}/assignments/{assignment_id}", status_code=204, tags=["Assignments"])
 async def delete_assignment(
     employee_id: uuid.UUID,
     assignment_id: uuid.UUID,

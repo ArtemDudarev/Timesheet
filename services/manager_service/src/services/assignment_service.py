@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.assignment_status import AssignmentStatus
@@ -49,9 +50,10 @@ class AssignmentService:
             status_id=data.assignment_status_id,
         )
         self.db.add(assignment)
+        await self.db.flush()
+        assignment_id = assignment.id
         await self.db.commit()
-        await self.db.refresh(assignment, attribute_names=["project", "project_role", "assignment_status"])
-        return assignment
+        return await self._reload(assignment_id)
 
     async def update(
         self,
@@ -69,9 +71,9 @@ class AssignmentService:
         for field, value in update_data.items():
             setattr(assignment, field, value)
 
+        assignment_id = assignment.id
         await self.db.commit()
-        await self.db.refresh(assignment, attribute_names=["project", "project_role", "assignment_status"])
-        return assignment
+        return await self._reload(assignment_id)
 
     async def delete(self, assignment: EmployeeProject) -> None:
         await self.db.delete(assignment)
@@ -108,3 +110,15 @@ class AssignmentService:
         s = await self.db.get(AssignmentStatus, status_id)
         if not s:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Статус назначения не найден")
+
+    async def _reload(self, assignment_id: uuid.UUID) -> EmployeeProject:
+        result = await self.db.execute(
+            select(EmployeeProject)
+            .options(
+                selectinload(EmployeeProject.project).selectinload(Project.project_status),
+                selectinload(EmployeeProject.project_role),
+                selectinload(EmployeeProject.assignment_status),
+            )
+            .where(EmployeeProject.id == assignment_id)
+        )
+        return result.scalar_one()
