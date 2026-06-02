@@ -19,8 +19,8 @@ class TimeEntry(Base):
     employee_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("employee.id", ondelete="CASCADE"), nullable=False
     )
-    employee_project_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        Uuid, ForeignKey("employee_project.id", ondelete="SET NULL"), nullable=True
+    assignment_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid, ForeignKey("assignment.id", ondelete="SET NULL"), nullable=True
     )
     type_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("entry_type_ref.id"), nullable=False
@@ -42,9 +42,10 @@ class TimeEntry(Base):
     entry_type: Mapped["EntryTypeRef"] = relationship(
         "EntryTypeRef", lazy="selectin"
     )
-    employee_project: Mapped[Optional["EmployeeProject"]] = relationship(
-        "EmployeeProject", lazy="selectin"
+    assignment: Mapped[Optional["Assignment"]] = relationship(
+        "Assignment", lazy="selectin"
     )
     overtime_approval: Mapped[Optional["OvertimeApproval"]] = relationship(
-        "OvertimeApproval", back_populates="time_entry", uselist=False, lazy="selectin"
+        "OvertimeApproval", back_populates="time_entry", uselist=False, lazy="selectin",
+        passive_deletes=True,
     )

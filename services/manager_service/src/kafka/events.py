@@ -22,7 +22,7 @@ from src.kafka.topics import (
     STATUS_UPDATED_TOPIC,
 )
 from src.models.employee import Employee
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.models.project import Project
 from src.models.project_role import ProjectRole
 from src.models.role import Role
@@ -219,7 +219,7 @@ async def publish_status_deleted(
 
 async def publish_employee_project_assigned(
     producer: KafkaEventProducer,
-    assignment: EmployeeProject,
+    assignment: Assignment,
 ) -> None:
     await producer.publish(
         EMPLOYEE_PROJECT_ASSIGNED_TOPIC,

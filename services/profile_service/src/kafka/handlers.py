@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import async_session_maker
 from src.models.employee import Employee
 from src.models.assignment_status import AssignmentStatus
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.models.project import Project
 from src.models.project_status import ProjectStatus
 from src.models.project_role import ProjectRole
@@ -153,9 +153,9 @@ async def handle_employee_project_assigned(payload: dict[str, Any]) -> None:
 
         project_role = await _upsert_project_role(session, role_data)
 
-        existing = await session.get(EmployeeProject, assignment_id)
+        existing = await session.get(Assignment, assignment_id)
         if existing is None:
-            assignment = EmployeeProject(
+            assignment = Assignment(
                 id=assignment_id,
                 employee_id=employee_id,
                 project_id=project_id,

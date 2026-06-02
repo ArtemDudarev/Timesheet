@@ -13,7 +13,7 @@ from .models.user_role import user_role
 from .models.employee import Employee
 from .models.project import Project
 from .models.project_role import ProjectRole
-from .models.employee_project import EmployeeProject
+from .models.employee_project import Assignment
 from .models.entry_type_ref import EntryTypeRef
 from .models.production_calendar import ProductionCalendar
 from .models.timesheet_period import TimesheetPeriod

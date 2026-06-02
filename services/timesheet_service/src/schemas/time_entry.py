@@ -38,7 +38,7 @@ class OvertimeApprovalShort(BaseModel):
 
 class TimeEntryCreate(BaseModel):
     type_id: uuid.UUID
-    employee_project_id: Optional[uuid.UUID] = None
+    assignment_id: Optional[uuid.UUID] = None
     date_from: date
     date_to: date
     spend_time: Optional[float] = None
@@ -64,7 +64,7 @@ class TimeEntryResponse(BaseModel):
     id: uuid.UUID
     timesheet_period_id: uuid.UUID
     entry_type: EntryTypeRefResponse
-    employee_project: Optional[AssignmentShort]
+    assignment: Optional[AssignmentShort]
     date_from: date
     date_to: date
     spend_time: float

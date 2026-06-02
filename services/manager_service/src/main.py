@@ -29,7 +29,7 @@ from .models.user import User
 from .models.user_role import user_role
 from .models.employee import Employee
 from .models.project_role import ProjectRole
-from .models.employee_project import EmployeeProject
+from .models.employee_project import Assignment
 
 from .routers.status import router as status_router
 from .routers.project import router as project_router
@@ -37,7 +37,7 @@ from .routers.project_status import router as project_status_router
 from .routers.assignment_status import router as assignment_status_router
 from .routers.role import router as role_router
 from .routers.project_role import router as project_role_router
-from .routers.employee import router as employee_router
+from .routers.employee import router as employee_router, assignment_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,6 +76,7 @@ app.include_router(project_router)
 app.include_router(role_router)
 app.include_router(project_role_router)
 app.include_router(employee_router)
+app.include_router(assignment_router)
 
 @app.get("/health")
 async def health_check():
