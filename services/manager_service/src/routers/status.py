@@ -10,7 +10,7 @@ from src.schemas.status import StatusCreate, StatusRead, StatusUpdate
 from src.services.status_service import StatusService
 
 
-router = APIRouter(prefix="/statuses", tags=["Statuses"])
+router = APIRouter(prefix="/employee-statuses", tags=["Employee Statuses"])
 
 _manager = Depends(require_roles("Менеджер"))
 

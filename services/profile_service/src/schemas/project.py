@@ -10,7 +10,6 @@ from .project_status import ProjectStatusResponse
 class ProjectRead(BaseModel):
     id: uuid.UUID
     name: str
-    status_id: uuid.UUID
     project_status: ProjectStatusResponse
     start_date: Optional[date] = None
     end_date: Optional[date] = None

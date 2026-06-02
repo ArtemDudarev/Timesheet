@@ -17,9 +17,11 @@ from src.models.role import Role
 from src.models.user import User
 from src.models.user_role import user_role
 from src.models.employee import Employee
-from src.models.project import Project, ProjectStatus
+from src.models.project import Project
+from src.models.project_status import ProjectStatus
 from src.models.project_role import ProjectRole
-from src.models.employee_project import EmployeeProject, AssignmentStatus
+from src.models.assignment_status import AssignmentStatus
+from src.models.employee_project import EmployeeProject
 from src.database import get_async_session
 from src.main import app
 
@@ -28,14 +30,17 @@ JWT_SECRET = "change-me-in-production"
 JWT_ALGORITHM = "HS256"
 
 # ── Фиксированные UUID ────────────────────────────────────────────────────────
-MANAGER_ROLE_ID  = uuid.UUID("00000000-0000-0000-0000-000000000001")
-EMPLOYEE_ROLE_ID = uuid.UUID("00000000-0000-0000-0000-000000000002")
-STATUS_ID        = uuid.UUID("11111111-0000-0000-0000-000000000001")
-STATUS_2_ID      = uuid.UUID("11111111-0000-0000-0000-000000000002")
-PROJECT_ROLE_ID  = uuid.UUID("22222222-0000-0000-0000-000000000001")
-PROJECT_ID       = uuid.UUID("33333333-0000-0000-0000-000000000001")
-EMPLOYEE_ID      = uuid.UUID("aaaaaaaa-0000-0000-0000-000000000001")
-MANAGER_USER_ID  = uuid.UUID("aaaaaaaa-0000-0000-0000-000000000002")
+MANAGER_ROLE_ID       = uuid.UUID("00000000-0000-0000-0000-000000000001")
+EMPLOYEE_ROLE_ID      = uuid.UUID("00000000-0000-0000-0000-000000000002")
+STATUS_ID             = uuid.UUID("11111111-0000-0000-0000-000000000001")
+STATUS_2_ID           = uuid.UUID("11111111-0000-0000-0000-000000000002")
+PROJECT_ROLE_ID       = uuid.UUID("22222222-0000-0000-0000-000000000001")
+PROJECT_ID            = uuid.UUID("33333333-0000-0000-0000-000000000001")
+EMPLOYEE_ID           = uuid.UUID("aaaaaaaa-0000-0000-0000-000000000001")
+MANAGER_USER_ID       = uuid.UUID("aaaaaaaa-0000-0000-0000-000000000002")
+PROJECT_STATUS_ID     = uuid.UUID("44444444-0000-0000-0000-000000000001")
+ASSIGN_STATUS_ID      = uuid.UUID("55555555-0000-0000-0000-000000000001")
+ASSIGN_STATUS_REQ_ID  = uuid.UUID("55555555-0000-0000-0000-000000000002")
 
 
 def create_test_token(sub: str, roles: list[str]) -> str:
@@ -81,6 +86,8 @@ async def client(db_session):
         patch("src.main.seed_roles", new_callable=AsyncMock),
         patch("src.main.seed_statuses", new_callable=AsyncMock),
         patch("src.main.seed_project_roles", new_callable=AsyncMock),
+        patch("src.main.seed_project_statuses", new_callable=AsyncMock),
+        patch("src.main.seed_assignment_statuses", new_callable=AsyncMock),
         patch("src.main.seed_demo_projects", new_callable=AsyncMock),
         patch("src.main.seed_demo_employee_profiles", new_callable=AsyncMock),
         patch("src.main.seed_demo_assignments", new_callable=AsyncMock),
@@ -146,8 +153,32 @@ async def test_project_role(db_session):
 
 
 @pytest_asyncio.fixture
-async def test_project(db_session):
-    project = Project(id=PROJECT_ID, name="Тестовый проект", status=ProjectStatus.ACTIVE)
+async def test_project_status(db_session):
+    ps = ProjectStatus(id=PROJECT_STATUS_ID, code="ACTIVE", name="Активный")
+    db_session.add(ps)
+    await db_session.flush()
+    return ps
+
+
+@pytest_asyncio.fixture
+async def test_assign_status(db_session):
+    s = AssignmentStatus(id=ASSIGN_STATUS_ID, code="ACTIVE", name="Привлечён")
+    db_session.add(s)
+    await db_session.flush()
+    return s
+
+
+@pytest_asyncio.fixture
+async def test_assign_status_req(db_session):
+    s = AssignmentStatus(id=ASSIGN_STATUS_REQ_ID, code="REQUEST", name="Заявка")
+    db_session.add(s)
+    await db_session.flush()
+    return s
+
+
+@pytest_asyncio.fixture
+async def test_project(db_session, test_project_status):
+    project = Project(id=PROJECT_ID, name="Тестовый проект", status_id=PROJECT_STATUS_ID)
     db_session.add(project)
     await db_session.flush()
     return project
@@ -174,12 +205,12 @@ async def test_employee(db_session, test_status, employee_role):
 
 
 @pytest_asyncio.fixture
-async def test_assignment(db_session, test_employee, test_project, test_project_role):
+async def test_assignment(db_session, test_employee, test_project, test_project_role, test_assign_status):
     assignment = EmployeeProject(
         employee_id=EMPLOYEE_ID,
         project_id=PROJECT_ID,
         project_role_id=PROJECT_ROLE_ID,
-        status=AssignmentStatus.ACTIVE,
+        status_id=ASSIGN_STATUS_ID,
     )
     db_session.add(assignment)
     await db_session.flush()

@@ -109,25 +109,44 @@ async def handle_project_role_deleted(payload: dict[str, Any], producer=None) ->
 async def handle_employee_project_assigned(payload: dict[str, Any], producer=None) -> None:
     async with async_session_maker() as session:
         employee_id = UUID(str(payload["employee_id"]))
+        project_id = UUID(str(payload["project_id"]))
+        project_role_id = UUID(str(payload["project_role"]["id"]))
+
         employee = await session.get(Employee, employee_id)
         if employee is None:
-            logger.warning("employee.project_assigned: employee %s not found, skipping", employee_id)
-            return
+            raise RuntimeError(
+                f"employee.project_assigned: employee {employee_id} not found — "
+                "event will be retried on next restart"
+            )
+
+        project = await session.get(Project, project_id)
+        if project is None:
+            raise RuntimeError(
+                f"employee.project_assigned: project {project_id} not found — "
+                "event will be retried on next restart"
+            )
+
+        project_role = await session.get(ProjectRole, project_role_id)
+        if project_role is None:
+            raise RuntimeError(
+                f"employee.project_assigned: project_role {project_role_id} not found — "
+                "event will be retried on next restart"
+            )
 
         assignment_id = UUID(str(payload["assignment_id"]))
         assignment = await session.get(EmployeeProject, assignment_id)
         if assignment is None:
+            raw_start = payload.get("start_date")
+            raw_end = payload.get("end_date")
             assignment = EmployeeProject(
                 id=assignment_id,
                 employee_id=employee_id,
-                project_id=UUID(str(payload["project_id"])),
-                project_role_id=UUID(str(payload["project_role"]["id"])),
+                project_id=project_id,
+                project_role_id=project_role_id,
+                start_date=date.fromisoformat(raw_start) if raw_start else None,
+                end_date=date.fromisoformat(raw_end) if raw_end else None,
                 status=payload.get("status"),
             )
-            raw_start = payload.get("start_date")
-            raw_end = payload.get("end_date")
-            assignment.start_date = date.fromisoformat(raw_start) if raw_start else None
-            assignment.end_date = date.fromisoformat(raw_end) if raw_end else None
             session.add(assignment)
         else:
             assignment.status = payload.get("status", assignment.status)
