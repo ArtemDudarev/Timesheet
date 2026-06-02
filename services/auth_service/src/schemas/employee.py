@@ -20,6 +20,8 @@ def _validate_password(v: str) -> str:
         errors.append("минимум одна цифра")
     if not re.search(r"[!@#$%^&*()\-_=+\[\]{};:'\",.<>?/\\|`~]", v):
         errors.append("минимум один специальный символ")
+    if re.search(r"[а-яёА-ЯЁ]", v):
+        errors.append("пароль не должен содержать кириллицу")
     if errors:
         raise ValueError(", ".join(errors))
     return v

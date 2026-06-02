@@ -126,6 +126,7 @@ async def logout(
     request: Request,
     response: Response,
     session: AsyncSession = Depends(get_async_session),
+    _: dict = Depends(get_current_user),
 ):
     token = request.cookies.get("refresh_token")
     if token:

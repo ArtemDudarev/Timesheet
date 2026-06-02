@@ -15,7 +15,6 @@ class AssignmentRead(BaseModel):
     project_role: ProjectRoleResponse
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    status_id: uuid.UUID
     assignment_status: AssignmentStatusResponse
 
     model_config = ConfigDict(from_attributes=True)

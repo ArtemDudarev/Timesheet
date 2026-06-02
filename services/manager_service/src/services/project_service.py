@@ -27,10 +27,10 @@ class ProjectService:
         return list(result.scalars().all())
 
     async def create_project(self, data: ProjectCreate) -> Project:
-        await self._validate_status(data.status_id)
+        await self._validate_status(data.project_status_id)
         new_project = Project(
             name=data.name,
-            status_id=data.status_id,
+            status_id=data.project_status_id,
             start_date=data.start_date,
             end_date=data.end_date,
         )
@@ -55,8 +55,9 @@ class ProjectService:
             return None
 
         update_data = data.model_dump(exclude_unset=True)
-        if "status_id" in update_data:
-            await self._validate_status(update_data["status_id"])
+        if "project_status_id" in update_data:
+            await self._validate_status(update_data["project_status_id"])
+            update_data["status_id"] = update_data.pop("project_status_id")
         for field, value in update_data.items():
             setattr(project, field, value)
 

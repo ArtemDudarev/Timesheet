@@ -6,10 +6,11 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.kafka.events import (
+    publish_employee_profile_created,
     publish_employee_project_assigned,
     publish_employee_status_changed,
-    publish_employee_updated,
     publish_project_created,
+    publish_project_role_created,
     publish_role_created,
     publish_status_created,
 )
@@ -225,16 +226,20 @@ async def seed_statuses(
 
 async def seed_project_roles(
     session_maker: async_sessionmaker[AsyncSession],
+    producer: KafkaEventProducer,
 ) -> None:
     async with session_maker() as session:
         for pr in SEED_PROJECT_ROLES:
             existing = await session.get(ProjectRole, pr["id"])
             if existing is None:
-                session.add(ProjectRole(
+                role_obj = ProjectRole(
                     id=pr["id"],
                     name=pr["name"],
                     description=pr["description"],
-                ))
+                )
+                session.add(role_obj)
+                await session.flush()
+                await publish_project_role_created(producer, role_obj)
         await session.commit()
 
 
@@ -298,13 +303,13 @@ async def seed_demo_employee_profiles(
                 )
                 session.add(employee)
                 await session.flush()
-                await publish_employee_updated(producer, employee)
+                await publish_employee_profile_created(producer, employee, user)
             elif employee.first_name == "Не указано":
                 employee.first_name = profile["first_name"]
                 employee.last_name = profile["last_name"]
                 employee.phone = profile["phone"]
                 await session.flush()
-                await publish_employee_updated(producer, employee)
+                await publish_employee_profile_created(producer, employee, user)
 
         await session.commit()
 

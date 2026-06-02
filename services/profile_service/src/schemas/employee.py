@@ -1,8 +1,9 @@
+import re
 import uuid
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from .assignment import AssignmentRead
 from .role import RoleRead
@@ -41,3 +42,12 @@ class EmployeeUpdate(BaseModel):
     address: Optional[str] = None
     birthday: Optional[date] = None
     image_url: Optional[str] = None
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+        if not re.match(r"^\+?[\d\s\-(). ]{7,20}$", v):
+            raise ValueError("Некорректный формат телефона. Допустимы цифры, +, пробелы, дефис, скобки")
+        return v
