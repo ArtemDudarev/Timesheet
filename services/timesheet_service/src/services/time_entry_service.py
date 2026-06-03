@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.models.entry_type_ref import EntryTypeRef
 from src.models.overtime_approval import ApprovalStatus, OvertimeApproval
 from src.models.time_entry import TimeEntry
@@ -58,9 +58,9 @@ class TimeEntryService:
         return t
 
     async def _validate_assignment(
-        self, employee_id: uuid.UUID, employee_project_id: uuid.UUID
-    ) -> EmployeeProject:
-        assignment = await self.db.get(EmployeeProject, employee_project_id)
+        self, employee_id: uuid.UUID, assignment_id: uuid.UUID
+    ) -> Assignment:
+        assignment = await self.db.get(Assignment, assignment_id)
         if not assignment or assignment.employee_id != employee_id:
             raise HTTPException(status_code=404, detail="Назначение не найдено")
         return assignment
@@ -90,14 +90,14 @@ class TimeEntryService:
 
         entry_type = await self._get_type(data.type_id)
 
-        if entry_type.code not in (SICK_LEAVE, VACATION) and data.employee_project_id is None:
+        if entry_type.code not in (SICK_LEAVE, VACATION) and data.assignment_id is None:
             raise HTTPException(
                 status_code=400,
-                detail="employee_project_id обязателен для данного типа записи",
+                detail="assignment_id обязателен для данного типа трудозатрат",
             )
 
-        if data.employee_project_id:
-            await self._validate_assignment(period.employee_id, data.employee_project_id)
+        if data.assignment_id:
+            await self._validate_assignment(period.employee_id, data.assignment_id)
 
         spend_time = float(data.spend_time) if data.spend_time is not None else None
         overtime_entry: TimeEntry | None = None
@@ -113,7 +113,7 @@ class TimeEntryService:
                 entry = TimeEntry(
                     timesheet_period_id=period.id,
                     employee_id=period.employee_id,
-                    employee_project_id=data.employee_project_id,
+                    assignment_id=data.assignment_id,
                     type_id=overtime_type.id,
                     date_from=data.date_from,
                     date_to=data.date_to,
@@ -137,7 +137,7 @@ class TimeEntryService:
                     entry = TimeEntry(
                         timesheet_period_id=period.id,
                         employee_id=period.employee_id,
-                        employee_project_id=data.employee_project_id,
+                        assignment_id=data.assignment_id,
                         type_id=entry_type.id,
                         date_from=data.date_from,
                         date_to=data.date_to,
@@ -154,7 +154,7 @@ class TimeEntryService:
                 overtime_entry = TimeEntry(
                     timesheet_period_id=period.id,
                     employee_id=period.employee_id,
-                    employee_project_id=data.employee_project_id,
+                    assignment_id=data.assignment_id,
                     type_id=overtime_type.id,
                     date_from=data.date_from,
                     date_to=data.date_to,
@@ -178,7 +178,7 @@ class TimeEntryService:
             entry = TimeEntry(
                 timesheet_period_id=period.id,
                 employee_id=period.employee_id,
-                employee_project_id=data.employee_project_id,
+                assignment_id=data.assignment_id,
                 type_id=entry_type.id,
                 date_from=data.date_from,
                 date_to=data.date_to,
@@ -203,7 +203,7 @@ class TimeEntryService:
         entry = TimeEntry(
             timesheet_period_id=period.id,
             employee_id=period.employee_id,
-            employee_project_id=data.employee_project_id,
+            assignment_id=data.assignment_id,
             type_id=entry_type.id,
             date_from=data.date_from,
             date_to=data.date_to,

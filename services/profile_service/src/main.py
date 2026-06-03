@@ -20,7 +20,7 @@ from .models.user import User
 from .models.user_role import user_role
 from .models.employee import Employee
 from .models.project_role import ProjectRole
-from .models.employee_project import EmployeeProject
+from .models.employee_project import Assignment
 
 from .routers.status import router as status_router
 from .routers.employee import router as employee_router

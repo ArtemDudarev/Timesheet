@@ -17,7 +17,7 @@ from src.kafka.events import (
 from src.kafka.producer import KafkaEventProducer
 from src.models.employee import Employee
 from src.models.assignment_status import AssignmentStatus
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.models.project import Project
 from src.models.project_status import ProjectStatus
 from src.models.project_role import ProjectRole
@@ -320,7 +320,7 @@ async def seed_demo_assignments(
 ) -> None:
     async with session_maker() as session:
         for a in DEMO_ASSIGNMENTS:
-            existing = await session.get(EmployeeProject, a["id"])
+            existing = await session.get(Assignment, a["id"])
             if existing is not None:
                 continue
 
@@ -329,7 +329,7 @@ async def seed_demo_assignments(
             if employee is None or project is None:
                 continue
 
-            assignment = EmployeeProject(
+            assignment = Assignment(
                 id=a["id"],
                 employee_id=a["employee_id"],
                 project_id=a["project_id"],

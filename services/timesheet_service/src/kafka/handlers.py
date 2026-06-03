@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import async_session_maker
 from src.models.employee import Employee
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.models.project import Project
 from src.models.project_role import ProjectRole
 from src.models.role import Role
@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 async def handle_user_created(payload: dict[str, Any], producer=None) -> None:
     user_data = payload.get("user") or {}
     async with async_session_maker() as session:
-        await _upsert_user(session, user_data)
+        user = await _upsert_user(session, user_data)
+        roles = [await _upsert_role(session, r) for r in user_data.get("roles", [])]
+        await _set_user_roles(session, user.id, roles)
         await session.commit()
 
 
@@ -62,7 +64,10 @@ async def handle_employee_role_assigned(payload: dict[str, Any], producer=None) 
     async with async_session_maker() as session:
         user = await session.get(User, employee_id)
         if user is None:
-            return
+            raise RuntimeError(
+                f"employee.role_assigned: user {employee_id} not found — "
+                "event will be retried on next restart"
+            )
         roles = [await _upsert_role(session, r) for r in payload.get("roles", [])]
         await _set_user_roles(session, employee_id, roles)
         await session.commit()
@@ -134,11 +139,11 @@ async def handle_employee_project_assigned(payload: dict[str, Any], producer=Non
             )
 
         assignment_id = UUID(str(payload["assignment_id"]))
-        assignment = await session.get(EmployeeProject, assignment_id)
+        assignment = await session.get(Assignment, assignment_id)
         if assignment is None:
             raw_start = payload.get("start_date")
             raw_end = payload.get("end_date")
-            assignment = EmployeeProject(
+            assignment = Assignment(
                 id=assignment_id,
                 employee_id=employee_id,
                 project_id=project_id,

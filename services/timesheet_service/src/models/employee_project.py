@@ -8,8 +8,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 
 
-class EmployeeProject(Base):
-    __tablename__ = "employee_project"
+class Assignment(Base):
+    __tablename__ = "assignment"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
     employee_id: Mapped[uuid.UUID] = mapped_column(

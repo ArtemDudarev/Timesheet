@@ -21,7 +21,7 @@ from src.models.project import Project
 from src.models.project_status import ProjectStatus
 from src.models.project_role import ProjectRole
 from src.models.assignment_status import AssignmentStatus
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.database import get_async_session
 from src.main import app
 
@@ -206,7 +206,7 @@ async def test_employee(db_session, test_status, employee_role):
 
 @pytest_asyncio.fixture
 async def test_assignment(db_session, test_employee, test_project, test_project_role, test_assign_status):
-    assignment = EmployeeProject(
+    assignment = Assignment(
         employee_id=EMPLOYEE_ID,
         project_id=PROJECT_ID,
         project_role_id=PROJECT_ROLE_ID,

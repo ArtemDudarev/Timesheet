@@ -17,7 +17,7 @@ from src.models.user_role import user_role
 from src.models.employee import Employee
 from src.models.project import Project
 from src.models.project_role import ProjectRole
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.database import get_async_session
 from src.main import app
 

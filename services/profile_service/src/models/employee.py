@@ -27,8 +27,8 @@ class Employee(Base):
 
     user: Mapped["User"] = relationship("User", back_populates="employee", lazy="selectin")
     status: Mapped["Status"] = relationship("Status", back_populates="employees", lazy="selectin")
-    assignments: Mapped[List["EmployeeProject"]] = relationship(
-        "EmployeeProject",
+    assignments: Mapped[List["Assignment"]] = relationship(
+        "Assignment",
         back_populates="employee",
         lazy="selectin",
     )

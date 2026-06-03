@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.assignment_status import AssignmentStatus
 from src.models.employee import Employee
-from src.models.employee_project import EmployeeProject
+from src.models.employee_project import Assignment
 from src.models.project import Project
 from src.models.project_role import ProjectRole
 from src.schemas.assignment import AssignmentCreate, AssignmentUpdate
@@ -22,11 +22,11 @@ class AssignmentService:
         self,
         assignment_id: uuid.UUID,
         employee_id: uuid.UUID,
-    ) -> Optional[EmployeeProject]:
+    ) -> Optional[Assignment]:
         result = await self.db.execute(
-            select(EmployeeProject).where(
-                EmployeeProject.id == assignment_id,
-                EmployeeProject.employee_id == employee_id,
+            select(Assignment).where(
+                Assignment.id == assignment_id,
+                Assignment.employee_id == employee_id,
             )
         )
         return result.scalar_one_or_none()
@@ -35,13 +35,13 @@ class AssignmentService:
         self,
         employee_id: uuid.UUID,
         data: AssignmentCreate,
-    ) -> EmployeeProject:
+    ) -> Assignment:
         await self._validate_employee_not_fired(employee_id)
         await self._validate_project(data.project_id)
         await self._validate_role(data.project_role_id)
         await self._validate_status(data.assignment_status_id)
 
-        assignment = EmployeeProject(
+        assignment = Assignment(
             employee_id=employee_id,
             project_id=data.project_id,
             project_role_id=data.project_role_id,
@@ -57,9 +57,9 @@ class AssignmentService:
 
     async def update(
         self,
-        assignment: EmployeeProject,
+        assignment: Assignment,
         data: AssignmentUpdate,
-    ) -> EmployeeProject:
+    ) -> Assignment:
         update_data = data.model_dump(exclude_unset=True)
 
         if "project_role_id" in update_data:
@@ -75,7 +75,7 @@ class AssignmentService:
         await self.db.commit()
         return await self._reload(assignment_id)
 
-    async def delete(self, assignment: EmployeeProject) -> None:
+    async def delete(self, assignment: Assignment) -> None:
         await self.db.delete(assignment)
         await self.db.commit()
 
@@ -111,14 +111,14 @@ class AssignmentService:
         if not s:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Статус назначения не найден")
 
-    async def _reload(self, assignment_id: uuid.UUID) -> EmployeeProject:
+    async def _reload(self, assignment_id: uuid.UUID) -> Assignment:
         result = await self.db.execute(
-            select(EmployeeProject)
+            select(Assignment)
             .options(
-                selectinload(EmployeeProject.project).selectinload(Project.project_status),
-                selectinload(EmployeeProject.project_role),
-                selectinload(EmployeeProject.assignment_status),
+                selectinload(Assignment.project).selectinload(Project.project_status),
+                selectinload(Assignment.project_role),
+                selectinload(Assignment.assignment_status),
             )
-            .where(EmployeeProject.id == assignment_id)
+            .where(Assignment.id == assignment_id)
         )
         return result.scalar_one()
