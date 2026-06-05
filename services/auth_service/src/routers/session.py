@@ -12,32 +12,67 @@ from src.services.employee_service import UserService
 router = APIRouter(prefix="/auth/sessions", tags=["Sessions"])
 
 
+# Не-браузерные клиенты (подстрока в UA → отображаемое имя)
+_NON_BROWSER_CLIENTS = [
+    ("PostmanRuntime", "Postman"),
+    ("insomnia", "Insomnia"),
+    ("curl", "curl"),
+    ("Wget", "Wget"),
+    ("HTTPie", "HTTPie"),
+    ("python-requests", "Python requests"),
+    ("python-httpx", "Python httpx"),
+    ("aiohttp", "aiohttp"),
+    ("okhttp", "OkHttp"),
+    ("axios", "axios"),
+    ("Go-http-client", "Go client"),
+    ("Java/", "Java client"),
+    ("Dart/", "Dart client"),
+    ("bot", "Бот"),
+    ("Bot", "Бот"),
+    ("spider", "Краулер"),
+]
+
+
+def _detect_browser(ua: str) -> str:
+    """Порядок важен: многие браузеры подставляют Chrome/Safari в UA."""
+    if "Edg" in ua or "EdgA" in ua or "EdgiOS" in ua:   return "Edge"
+    if "OPR/" in ua or "Opera" in ua or "OPiOS" in ua:  return "Opera"
+    if "YaBrowser" in ua:                               return "Yandex Browser"
+    if "SamsungBrowser" in ua:                          return "Samsung Internet"
+    if "Vivaldi" in ua:                                 return "Vivaldi"
+    if "Firefox" in ua or "FxiOS" in ua:                return "Firefox"
+    if "CriOS" in ua or "Chrome" in ua:                 return "Chrome"
+    if "Safari" in ua:                                  return "Safari"
+    return "Браузер"
+
+
+def _detect_os(ua: str) -> str | None:
+    if "iPhone" in ua:                          return "iPhone"
+    if "iPad" in ua:                            return "iPad"
+    if "iPod" in ua:                            return "iPod"
+    if "Android" in ua:                         return "Android"
+    if "Windows Phone" in ua:                   return "Windows Phone"
+    if "Windows" in ua:                         return "Windows"
+    if "CrOS" in ua:                            return "ChromeOS"
+    if "Macintosh" in ua or "Mac OS X" in ua:   return "macOS"
+    if "Linux" in ua:                           return "Linux"
+    return None
+
+
 def _parse_device(user_agent: str | None) -> str:
     if not user_agent:
         return "Неизвестное устройство"
     ua = user_agent
-    if "iPhone" in ua:
-        browser = "Safari" if "Safari" in ua and "Chrome" not in ua else "Chrome"
-        return f"{browser} · iPhone"
-    if "iPad" in ua:
-        return "Safari · iPad"
-    if "Android" in ua:
-        browser = "Chrome" if "Chrome" in ua else "Browser"
-        return f"{browser} · Android"
-    if "Windows" in ua:
-        if "Edg" in ua:     return "Edge · Windows"
-        if "Chrome" in ua:  return "Chrome · Windows"
-        if "Firefox" in ua: return "Firefox · Windows"
-        return "Browser · Windows"
-    if "Macintosh" in ua or "Mac OS X" in ua:
-        if "Chrome" in ua and "Edg" not in ua: return "Chrome · macOS"
-        if "Firefox" in ua:                    return "Firefox · macOS"
-        if "Safari" in ua:                     return "Safari · macOS"
-        return "Browser · macOS"
-    if "Linux" in ua:
-        browser = "Chrome" if "Chrome" in ua else "Firefox" if "Firefox" in ua else "Browser"
-        return f"{browser} · Linux"
-    return "Браузер"
+
+    for needle, label in _NON_BROWSER_CLIENTS:
+        if needle in ua:
+            return label
+
+    browser = _detect_browser(ua)
+    os_name = _detect_os(ua)
+    if os_name:
+        return f"{browser} · {os_name}"
+    return browser
 
 
 def _to_read(rt: RefreshToken) -> SessionRead:
