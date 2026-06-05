@@ -10,18 +10,19 @@ from slowapi.errors import RateLimitExceeded
 from src.limiter import limiter
 
 from .database import engine, async_session_maker
-from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
 from .kafka.producer import KafkaEventProducer
 from src.models.base import Base
 from src.models.user import User
 from src.models.user_role import user_role
-from src.models.user import User
-from src.models.user_role import user_role
 from src.models.role import Role
+from src.models.role_permission import role_permission
+from src.models.permission import Permission
 from src.models.refresh_token import RefreshToken
 from src.routers.employee import router as auth_router
-from src.seed import seed_demo_users, seed_roles
+from src.routers.admin import router as admin_router
+from src.routers.session import router as session_router
+from src.seed import seed_demo_users, seed_permissions, seed_role_permissions, seed_roles
 
 
 @asynccontextmanager
@@ -31,6 +32,8 @@ async def lifespan(app: FastAPI):
     app.state.kafka_producer = KafkaEventProducer()
     await app.state.kafka_producer.start()
     await seed_roles(async_session_maker)
+    await seed_permissions(async_session_maker)
+    await seed_role_permissions(async_session_maker)
     await seed_demo_users(async_session_maker, app.state.kafka_producer)
     app.state.kafka_consumer = KafkaEventConsumer()
     app.state.kafka_consumer_task = asyncio.create_task(
@@ -62,3 +65,5 @@ def read_root():
     return {"message": "Auth Service is running"}
 
 app.include_router(auth_router)
+app.include_router(admin_router)
+app.include_router(session_router)

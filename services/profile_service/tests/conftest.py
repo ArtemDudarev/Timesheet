@@ -35,9 +35,23 @@ MANAGER_ID      = uuid.UUID("aaaaaaaa-0000-0000-0000-000000000002")
 OTHER_USER_ID   = uuid.UUID("aaaaaaaa-0000-0000-0000-000000000003")
 
 
-def create_test_token(sub: str, roles: list[str]) -> str:
+_MANAGER_PERMISSIONS = [
+    "employee:list", "employee:read_any", "employee:edit_any",
+    "employee:assign_grade", "employee:skills_edit_any",
+    "directory:manage",
+    "timesheet:read_any", "summary:read_any",
+]
+
+
+def create_test_token(sub: str, roles: list[str], permissions: list[str] | None = None) -> str:
     return jwt.encode(
-        {"sub": sub, "roles": roles, "is_active": True, "exp": int(time.time()) + 3600},
+        {
+            "sub": sub,
+            "roles": roles,
+            "permissions": permissions if permissions is not None else [],
+            "is_active": True,
+            "exp": int(time.time()) + 3600,
+        },
         JWT_SECRET,
         algorithm=JWT_ALGORITHM,
     )
@@ -170,15 +184,15 @@ async def other_user(db_session, test_status, employee_role):
 
 @pytest.fixture
 def user_token():
-    return create_test_token(str(USER_ID), ["Сотрудник"])
+    return create_test_token(str(USER_ID), ["Сотрудник"], [])
 
 
 @pytest.fixture
 def manager_token():
-    return create_test_token(str(MANAGER_ID), ["Менеджер", "Сотрудник"])
+    return create_test_token(str(MANAGER_ID), ["Менеджер", "Сотрудник"], _MANAGER_PERMISSIONS)
 
 
 @pytest.fixture
 def other_token():
     """Токен другого сотрудника (не менеджер, не владелец профиля USER_ID)."""
-    return create_test_token(str(OTHER_USER_ID), ["Сотрудник"])
+    return create_test_token(str(OTHER_USER_ID), ["Сотрудник"], [])

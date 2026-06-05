@@ -25,6 +25,7 @@ from .routers.timesheet_period import router as period_router
 from .routers.time_entry import router as entry_router
 from .routers.overtime_approval import router as approval_router
 from .routers.entry_type_ref import router as entry_type_router
+from .routers.summary import router as summary_router
 
 
 @asynccontextmanager
@@ -61,6 +62,7 @@ app.include_router(calendar_router)
 app.include_router(period_router)
 app.include_router(entry_router)
 app.include_router(approval_router)
+app.include_router(summary_router)
 
 
 @app.get("/health")

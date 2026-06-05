@@ -60,6 +60,8 @@ async def client(db_session):
         patch("src.main.KafkaEventProducer", return_value=mock_producer),
         patch("src.main.KafkaEventConsumer", return_value=AsyncMock()),
         patch("src.main.seed_roles", new_callable=AsyncMock),
+        patch("src.main.seed_permissions", new_callable=AsyncMock),
+        patch("src.main.seed_role_permissions", new_callable=AsyncMock),
         patch("src.main.seed_demo_users", new_callable=AsyncMock),
         patch("src.main.engine") as mock_engine,
     ):
@@ -157,12 +159,27 @@ async def refresh_token_val(db_session, regular_user):
 # ── Фикстуры токенов ──────────────────────────────────────────────────────────
 # Токен — просто подписанный JWT. Создаётся без обращения к БД.
 
+_MANAGER_PERMISSIONS = [
+    "user:register", "user:reset_password",
+    "employee:list", "employee:read_any", "employee:edit_any",
+    "employee:assign_grade", "employee:skills_edit_any", "employee:set_lead",
+    "employee:assign_roles", "employee:assign_status",
+    "project:read", "project:manage", "project:assign",
+    "directory:manage",
+    "timesheet:read_any", "timesheet:edit_any", "timesheet:close_period",
+    "overtime:approve", "summary:read_any",
+]
+
+_ADMIN_PERMISSIONS = _MANAGER_PERMISSIONS + ["system:manage", "calendar:manage"]
+
+
 @pytest.fixture
 def regular_token():
     return create_access_token({
         "sub": str(REGULAR_USER_ID),
         "email": "employee@test.com",
         "roles": ["Сотрудник"],
+        "permissions": [],
         "is_active": True,
     })
 
@@ -173,5 +190,17 @@ def manager_token():
         "sub": str(MANAGER_USER_ID),
         "email": "manager@test.com",
         "roles": ["Менеджер", "Сотрудник"],
+        "permissions": _MANAGER_PERMISSIONS,
+        "is_active": True,
+    })
+
+
+@pytest.fixture
+def admin_token():
+    return create_access_token({
+        "sub": str(MANAGER_USER_ID),
+        "email": "admin@test.com",
+        "roles": ["Администратор", "Сотрудник"],
+        "permissions": _ADMIN_PERMISSIONS,
         "is_active": True,
     })

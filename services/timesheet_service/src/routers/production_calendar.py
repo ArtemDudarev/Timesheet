@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from src.dependencies import get_current_user, require_roles
+from src.dependencies import get_current_user, require_permission
 from src.schemas.production_calendar import ProductionCalendarResponse, ProductionCalendarUpsert
 from src.services.production_calendar_service import ProductionCalendarService
 
 router = APIRouter(prefix="/production-calendar", tags=["Production Calendar"])
 
 _authenticated = Depends(get_current_user)
-_manager = Depends(require_roles("Менеджер"))
+_manager = Depends(require_permission("calendar:manage"))
 
 
 @router.get("/{year}", response_model=list[ProductionCalendarResponse])

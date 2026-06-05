@@ -3,7 +3,6 @@ import uuid
 from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
-from sqlalchemy import select
 
 from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
@@ -21,10 +20,16 @@ from .models.user_role import user_role
 from .models.employee import Employee
 from .models.project_role import ProjectRole
 from .models.employee_project import Assignment
+from .models.department import Department
+from .models.grade import Grade
+from .models.skill import Skill, employee_skill
 
 from .routers.status import router as status_router
 from .routers.employee import router as employee_router
 from .routers.employee_role import router as employee_role_router
+from .routers.department import router as department_router
+from .routers.grade import router as grade_router
+from .routers.skill import router as skill_router
 
 _PROJECT_STATUSES = [
     (uuid.UUID("00000000-0000-0000-0001-000000000001"), "PLANNED",   "Планируется"),
@@ -77,6 +82,9 @@ app = FastAPI(title="Profile Service", lifespan=lifespan)
 app.include_router(status_router)
 app.include_router(employee_router)
 app.include_router(employee_role_router)
+app.include_router(department_router)
+app.include_router(grade_router)
+app.include_router(skill_router)
 
 @app.get("/health")
 async def health_check():

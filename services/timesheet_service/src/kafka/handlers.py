@@ -158,6 +158,20 @@ async def handle_employee_project_assigned(payload: dict[str, Any], producer=Non
         await session.commit()
 
 
+async def handle_employee_updated(payload: dict[str, Any], producer=None) -> None:
+    employee_data = payload.get("employee") or {}
+    employee_id = UUID(str(employee_data["id"]))
+    async with async_session_maker() as session:
+        employee = await session.get(Employee, employee_id)
+        if employee is None:
+            logger.warning("employee.updated: employee %s not found", employee_id)
+            return
+        if "lead_id" in employee_data:
+            raw = employee_data["lead_id"]
+            employee.lead_id = UUID(raw) if raw else None
+        await session.commit()
+
+
 async def handle_role_created(payload: dict[str, Any], producer=None) -> None:
     async with async_session_maker() as session:
         await _upsert_role(session, payload.get("role") or {})

@@ -16,6 +16,9 @@ async def publish_employee_updated(producer: KafkaEventProducer, employee: Emplo
                 "address": employee.address,
                 "birthday": employee.birthday,
                 "image_url": employee.image_url,
+                "position": employee.position,
+                "department_id": str(employee.department_id) if employee.department_id else None,
+                "grade_id": str(employee.grade_id) if employee.grade_id else None,
             },
         },
     )

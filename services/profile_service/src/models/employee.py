@@ -22,13 +22,28 @@ class Employee(Base):
     address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     birthday: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    position: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
 
     status_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("status.id"), nullable=False)
+    department_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid, ForeignKey("department.id", ondelete="SET NULL"), nullable=True
+    )
+    grade_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        Uuid, ForeignKey("grade.id", ondelete="SET NULL"), nullable=True
+    )
+    lead_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="employee", lazy="selectin")
     status: Mapped["Status"] = relationship("Status", back_populates="employees", lazy="selectin")
+    department: Mapped[Optional["Department"]] = relationship("Department", lazy="selectin")
+    grade: Mapped[Optional["Grade"]] = relationship("Grade", lazy="selectin")
     assignments: Mapped[List["Assignment"]] = relationship(
         "Assignment",
         back_populates="employee",
+        lazy="selectin",
+    )
+    skills: Mapped[List["Skill"]] = relationship(
+        "Skill",
+        secondary="employee_skill",
         lazy="selectin",
     )

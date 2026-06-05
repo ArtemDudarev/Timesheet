@@ -6,7 +6,10 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from .assignment import AssignmentRead
+from .department import DepartmentRead
+from .grade import GradeRead
 from .role import RoleRead
+from .skill import SkillRead
 from .status import StatusRead
 
 
@@ -28,8 +31,13 @@ class EmployeeRead(BaseModel):
     address: Optional[str] = None
     birthday: Optional[date] = None
     image_url: Optional[str] = None
+    position: Optional[str] = None
+    lead_id: Optional[uuid.UUID] = None
+    department: Optional[DepartmentRead] = None
+    grade: Optional[GradeRead] = None
     status: StatusRead
     assignments: List[AssignmentRead] = Field(default_factory=list)
+    skills: List[SkillRead] = Field(default_factory=list)
     user: UserRead
 
     model_config = ConfigDict(from_attributes=True)
@@ -42,6 +50,9 @@ class EmployeeUpdate(BaseModel):
     address: Optional[str] = None
     birthday: Optional[date] = None
     image_url: Optional[str] = None
+    position: Optional[str] = None
+    department_id: Optional[uuid.UUID] = None
+    grade_id: Optional[uuid.UUID] = None
 
     @field_validator("phone")
     @classmethod
