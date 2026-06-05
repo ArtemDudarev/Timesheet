@@ -7,9 +7,12 @@ from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import async_session_maker
+from src.models.department import Department
 from src.models.employee import Employee
 from src.models.assignment_status import AssignmentStatus
 from src.models.employee_project import Assignment
+from src.models.grade import Grade
+from src.models.skill import Skill
 from src.models.project import Project
 from src.models.project_status import ProjectStatus
 from src.models.project_role import ProjectRole
@@ -45,6 +48,9 @@ async def handle_employee_updated(payload: dict[str, Any]) -> None:
         if "birthday" in employee_data:
             raw = employee_data["birthday"]
             employee.birthday = date.fromisoformat(raw) if raw else None
+        if "lead_id" in employee_data:
+            raw = employee_data["lead_id"]
+            employee.lead_id = UUID(raw) if raw else None
         await session.commit()
 
 
@@ -110,6 +116,109 @@ async def handle_role_deleted(payload: dict[str, Any]) -> None:
     async with async_session_maker() as session:
         await session.execute(delete(Role).where(Role.id == role_id))
         await session.commit()
+
+
+async def handle_department_created(payload: dict[str, Any]) -> None:
+    data = payload.get("department") or {}
+    dept_id = UUID(str(data["id"]))
+    async with async_session_maker() as session:
+        if await session.get(Department, dept_id) is None:
+            session.add(Department(id=dept_id, name=data["name"], description=data.get("description")))
+            await session.commit()
+
+
+async def handle_department_updated(payload: dict[str, Any]) -> None:
+    data = payload.get("department") or {}
+    dept_id = UUID(str(data["id"]))
+    async with async_session_maker() as session:
+        dept = await session.get(Department, dept_id)
+        if dept is None:
+            dept = Department(id=dept_id, name=data["name"], description=data.get("description"))
+            session.add(dept)
+        else:
+            dept.name = data["name"]
+            dept.description = data.get("description")
+        await session.commit()
+
+
+async def handle_department_deleted(payload: dict[str, Any]) -> None:
+    dept_id = UUID(str(payload["department_id"]))
+    async with async_session_maker() as session:
+        dept = await session.get(Department, dept_id)
+        if dept:
+            await session.delete(dept)
+            await session.commit()
+
+
+async def handle_grade_created(payload: dict[str, Any]) -> None:
+    data = payload.get("grade") or {}
+    grade_id = UUID(str(data["id"]))
+    async with async_session_maker() as session:
+        if await session.get(Grade, grade_id) is None:
+            session.add(Grade(
+                id=grade_id, name=data["name"],
+                description=data.get("description"),
+                sort_order=data.get("sort_order", 0),
+            ))
+            await session.commit()
+
+
+async def handle_grade_updated(payload: dict[str, Any]) -> None:
+    data = payload.get("grade") or {}
+    grade_id = UUID(str(data["id"]))
+    async with async_session_maker() as session:
+        grade = await session.get(Grade, grade_id)
+        if grade is None:
+            grade = Grade(
+                id=grade_id, name=data["name"],
+                description=data.get("description"),
+                sort_order=data.get("sort_order", 0),
+            )
+            session.add(grade)
+        else:
+            grade.name = data["name"]
+            grade.description = data.get("description")
+            grade.sort_order = data.get("sort_order", grade.sort_order)
+        await session.commit()
+
+
+async def handle_grade_deleted(payload: dict[str, Any]) -> None:
+    grade_id = UUID(str(payload["grade_id"]))
+    async with async_session_maker() as session:
+        grade = await session.get(Grade, grade_id)
+        if grade:
+            await session.delete(grade)
+            await session.commit()
+
+
+async def handle_skill_created(payload: dict[str, Any]) -> None:
+    data = payload.get("skill") or {}
+    skill_id = UUID(str(data["id"]))
+    async with async_session_maker() as session:
+        if await session.get(Skill, skill_id) is None:
+            session.add(Skill(id=skill_id, name=data["name"]))
+            await session.commit()
+
+
+async def handle_skill_updated(payload: dict[str, Any]) -> None:
+    data = payload.get("skill") or {}
+    skill_id = UUID(str(data["id"]))
+    async with async_session_maker() as session:
+        skill = await session.get(Skill, skill_id)
+        if skill is None:
+            session.add(Skill(id=skill_id, name=data["name"]))
+        else:
+            skill.name = data["name"]
+        await session.commit()
+
+
+async def handle_skill_deleted(payload: dict[str, Any]) -> None:
+    skill_id = UUID(str(payload["skill_id"]))
+    async with async_session_maker() as session:
+        skill = await session.get(Skill, skill_id)
+        if skill:
+            await session.delete(skill)
+            await session.commit()
 
 
 async def handle_project_created(payload: dict[str, Any]) -> None:
@@ -249,9 +358,15 @@ async def _upsert_status(session: AsyncSession, status_data: dict[str, Any]) -> 
     status_id = UUID(str(status_data["id"]))
     status = await session.get(Status, status_id)
     if status is None:
-        status = Status(id=status_id, name=status_data["name"], description=status_data.get("description"))
-        session.add(status)
-        await session.flush()
+        # мог быть создан через _get_or_create_default_status с другим UUID
+        result = await session.execute(select(Status).where(Status.name == status_data["name"]))
+        status = result.scalar_one_or_none()
+        if status is None:
+            status = Status(id=status_id, name=status_data["name"], description=status_data.get("description"))
+            session.add(status)
+            await session.flush()
+        else:
+            status.description = status_data.get("description")
     else:
         status.name = status_data["name"]
         status.description = status_data.get("description")

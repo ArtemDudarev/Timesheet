@@ -9,9 +9,12 @@ from sqlalchemy import delete, select, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.models.permission import Permission
 from src.models.refresh_token import RefreshToken
 from src.models.role import Role
+from src.models.role_permission import role_permission as role_permission_table
 from src.models.user import User
+from src.models.user_role import user_role as user_role_table
 from src.schemas.employee import UserCreate
 
 REFRESH_TOKEN_EXPIRE_DAYS = 30
@@ -62,7 +65,12 @@ class UserService:
         )
         return await self._save(user, data.email, number)
 
-    async def create_refresh_token(self, user_id: uuid.UUID) -> str:
+    async def create_refresh_token(
+        self,
+        user_id: uuid.UUID,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> str:
         await self.session.execute(
             delete(RefreshToken).where(
                 RefreshToken.user_id == user_id,
@@ -75,11 +83,18 @@ class UserService:
             token=token,
             expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
             created_at=datetime.utcnow(),
+            ip_address=ip_address,
+            user_agent=user_agent,
         ))
         await self.session.commit()
         return token
 
-    async def rotate_refresh_token(self, token: str) -> tuple[User, str]:
+    async def rotate_refresh_token(
+        self,
+        token: str,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> tuple[User, str]:
         result = await self.session.execute(
             select(RefreshToken).where(RefreshToken.token == token)
         )
@@ -100,6 +115,10 @@ class UserService:
             await self.session.delete(rt)
             await self.session.commit()
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Учётная запись деактивирована")
+
+        # Сохраняем метаданные от предыдущей сессии если новые не переданы
+        prev_ip = rt.ip_address
+        prev_ua = rt.user_agent
         await self.session.delete(rt)
 
         new_token = secrets.token_urlsafe(32)
@@ -108,10 +127,60 @@ class UserService:
             token=new_token,
             expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
             created_at=datetime.utcnow(),
+            ip_address=ip_address or prev_ip,
+            user_agent=user_agent or prev_ua,
         ))
         await self.session.commit()
         await self.session.refresh(user, attribute_names=["roles"])
         return user, new_token
+
+    async def get_sessions(
+        self,
+        user_id: uuid.UUID,
+        current_token: str | None,
+    ) -> list[RefreshToken]:
+        result = await self.session.execute(
+            select(RefreshToken)
+            .where(
+                RefreshToken.user_id == user_id,
+                RefreshToken.expires_at > datetime.utcnow(),
+            )
+            .order_by(RefreshToken.created_at.desc())
+        )
+        sessions = list(result.scalars().all())
+        # Помечаем текущую сессию через cookie-значение
+        for s in sessions:
+            s._is_current = (s.token == current_token) if current_token else False
+        return sessions
+
+    async def revoke_session(self, user_id: uuid.UUID, session_id: uuid.UUID) -> None:
+        rt = await self.session.get(RefreshToken, session_id)
+        if rt is None or rt.user_id != user_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сессия не найдена")
+        await self.session.delete(rt)
+        await self.session.commit()
+
+    async def revoke_all_sessions(
+        self,
+        user_id: uuid.UUID,
+        keep_token: str | None,
+    ) -> None:
+        q = delete(RefreshToken).where(RefreshToken.user_id == user_id)
+        if keep_token:
+            q = q.where(RefreshToken.token != keep_token)
+        await self.session.execute(q)
+        await self.session.commit()
+
+    async def get_permission_codes(self, user_id: uuid.UUID) -> list[str]:
+        result = await self.session.execute(
+            select(Permission.code)
+            .join(role_permission_table, role_permission_table.c.permission_id == Permission.id)
+            .join(user_role_table, user_role_table.c.role_id == role_permission_table.c.role_id)
+            .where(user_role_table.c.user_id == user_id)
+            .distinct()
+            .order_by(Permission.code)
+        )
+        return list(result.scalars().all())
 
     async def revoke_refresh_token(self, token: str) -> None:
         await self.session.execute(

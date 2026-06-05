@@ -1,9 +1,13 @@
 import uuid
 from typing import List
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from sqlalchemy import String, Text, Uuid
-from .user_role import user_role
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from .base import Base
+from .role_permission import role_permission
+from .user_role import user_role
+
 
 class Role(Base):
     __tablename__ = "role"
@@ -16,4 +20,10 @@ class Role(Base):
         "User",
         secondary=user_role,
         back_populates="roles",
+    )
+    permissions: Mapped[List["Permission"]] = relationship(
+        "Permission",
+        secondary=role_permission,
+        back_populates="roles",
+        lazy="selectin",
     )

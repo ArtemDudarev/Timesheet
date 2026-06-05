@@ -32,7 +32,10 @@ class EmployeeService:
 
         try:
             await self.db.commit()
-            await self.db.refresh(employee, attribute_names=["status", "user"])
+            await self.db.refresh(
+                employee,
+                attribute_names=["status", "user", "department", "grade", "skills", "assignments"],
+            )
             return employee
         except IntegrityError as exc:
             await self.db.rollback()

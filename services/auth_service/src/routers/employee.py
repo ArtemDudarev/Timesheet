@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from src.dependencies import get_current_user, require_roles
+from src.dependencies import get_current_user, require_permission, require_roles
 from src.kafka.events import publish_user_created
 from src.limiter import limiter
 from src.schemas.employee import PasswordChange, PasswordResetResponse, TokenResponse, UserCreate, UserLogin, UserRead
@@ -25,7 +25,7 @@ async def register(
     payload: UserCreate,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
-    _: dict = Depends(require_roles("Менеджер")),
+    _: dict = Depends(require_permission("user:register")),
 ):
     service = UserService(session)
     if await service.get_by_identity(payload.email):
@@ -72,13 +72,17 @@ async def login(
             detail="Учётная запись деактивирована",
         )
 
+    permissions = await service.get_permission_codes(user.id)
     access_token = create_access_token({
         "sub": str(user.id),
         "email": user.email,
         "roles": [role.name for role in user.roles],
+        "permissions": permissions,
         "is_active": user.is_active,
     })
-    refresh_token = await service.create_refresh_token(user.id)
+    ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else None)
+    ua = request.headers.get("User-Agent")
+    refresh_token = await service.create_refresh_token(user.id, ip_address=ip, user_agent=ua)
 
     response.set_cookie(
         key="refresh_token",
@@ -102,12 +106,16 @@ async def refresh(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token не найден")
 
     service = UserService(session)
-    user, new_refresh_token = await service.rotate_refresh_token(token)
+    ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else None)
+    ua = request.headers.get("User-Agent")
+    user, new_refresh_token = await service.rotate_refresh_token(token, ip_address=ip, user_agent=ua)
 
+    permissions = await service.get_permission_codes(user.id)
     access_token = create_access_token({
         "sub": str(user.id),
         "email": user.email,
         "roles": [role.name for role in user.roles],
+        "permissions": permissions,
         "is_active": user.is_active,
     })
     response.set_cookie(
@@ -126,7 +134,6 @@ async def logout(
     request: Request,
     response: Response,
     session: AsyncSession = Depends(get_async_session),
-    _: dict = Depends(get_current_user),
 ):
     token = request.cookies.get("refresh_token")
     if token:
@@ -144,7 +151,7 @@ async def logout(
 async def reset_password(
     user_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
-    _: dict = Depends(require_roles("Менеджер")),
+    _: dict = Depends(require_permission("user:reset_password")),
 ):
     service = UserService(session)
     temp_password = await service.reset_password(user_id)

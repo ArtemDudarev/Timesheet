@@ -15,17 +15,6 @@
             "ssh": "Disabled",
             "previewLimit": 50,
             "server": "localhost",
-            "port": 5433,
-            "driver": "PostgreSQL",
-            "name": "manager_db",
-            "database": "manager_db",
-            "username": "admin",
-            "password": "secret_password"
-        },
-        {
-            "ssh": "Disabled",
-            "previewLimit": 50,
-            "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
             "name": "profile_db",
@@ -43,6 +32,17 @@
             "database": "ts_db",
             "username": "admin",
             "password": "secret_password"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5433,
+            "driver": "PostgreSQL",
+            "name": "management_db",
+            "database": "management_db",
+            "password": "secret_password",
+            "username": "admin"
         }
     ],
     "python.testing.pytestArgs": [

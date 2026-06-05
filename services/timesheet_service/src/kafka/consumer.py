@@ -8,6 +8,7 @@ from aiokafka import AIOKafkaConsumer
 
 from src.kafka.topics import (
     EMPLOYEE_PROFILE_CREATED_TOPIC,
+    EMPLOYEE_UPDATED_TOPIC,
     EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
     EMPLOYEE_ROLE_ASSIGNED_TOPIC,
     PROJECT_CREATED_TOPIC,
@@ -23,6 +24,7 @@ from src.kafka.topics import (
 )
 from src.kafka.handlers import (
     handle_employee_profile_created,
+    handle_employee_updated,
     handle_employee_project_assigned,
     handle_employee_role_assigned,
     handle_project_created,
@@ -42,6 +44,7 @@ logger = logging.getLogger(__name__)
 HANDLERS = {
     "user.created": handle_user_created,
     "employee.profile_created": handle_employee_profile_created,
+    "employee.updated": handle_employee_updated,
     "employee.role_assigned": handle_employee_role_assigned,
     "employee.project_assigned": handle_employee_project_assigned,
     "project.created": handle_project_created,
@@ -58,6 +61,7 @@ HANDLERS = {
 TOPICS = [
     USER_CREATED_TOPIC,
     EMPLOYEE_PROFILE_CREATED_TOPIC,
+    EMPLOYEE_UPDATED_TOPIC,
     EMPLOYEE_ROLE_ASSIGNED_TOPIC,
     EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
     PROJECT_CREATED_TOPIC,

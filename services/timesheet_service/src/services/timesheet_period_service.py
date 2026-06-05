@@ -2,12 +2,13 @@ import uuid
 from datetime import datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.timesheet_period import PeriodStatus, TimesheetPeriod
+from src.models.employee import Employee
 from src.models.overtime_approval import ApprovalStatus, OvertimeApproval
 from src.models.time_entry import TimeEntry
+from src.models.timesheet_period import PeriodStatus, TimesheetPeriod
 
 
 class TimesheetPeriodService:
@@ -17,12 +18,19 @@ class TimesheetPeriodService:
     async def get_all(
         self,
         employee_id: uuid.UUID | None = None,
+        lead_id: uuid.UUID | None = None,
         skip: int = 0,
         limit: int = 100,
     ) -> list[TimesheetPeriod]:
         q = select(TimesheetPeriod)
         if employee_id:
             q = q.where(TimesheetPeriod.employee_id == employee_id)
+        elif lead_id:
+            # Тимлид видит свои периоды + периоды своей команды
+            q = (
+                q.join(Employee, Employee.id == TimesheetPeriod.employee_id)
+                .where(or_(Employee.lead_id == lead_id, Employee.id == lead_id))
+            )
         q = q.order_by(TimesheetPeriod.year.desc(), TimesheetPeriod.month.desc())
         q = q.offset(skip).limit(limit)
         result = await self.db.execute(q)

@@ -1,5 +1,6 @@
 # Consume
 USER_CREATED_TOPIC = "employee.created"
+EMPLOYEE_UPDATED_TOPIC = "employee.updated"
 EMPLOYEE_PROFILE_CREATED_TOPIC = "employee.profile_created"
 EMPLOYEE_ROLE_ASSIGNED_TOPIC = "employee.role_assigned"
 EMPLOYEE_PROJECT_ASSIGNED_TOPIC = "employee.project_assigned"

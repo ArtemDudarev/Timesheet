@@ -84,31 +84,31 @@ services:
         condition: service_healthy
 
   # =========================
-  # MANAGER DB
+  # MANAGEMENT DB
   # =========================
-  manager_db:
+  management_db:
     <<: *postgres-common
     environment:
-      POSTGRES_DB: manager_db
+      POSTGRES_DB: management_db
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${MANAGER_DB_PORT}:5432"
+      - "${MANAGEMENT_DB_PORT}:5432"
     volumes:
-      - manager_db_data:/var/lib/postgresql/data
+      - management_db_data:/var/lib/postgresql/data
 
-  manager_service:
+  management_service:
     <<: *service-common
-    build: ./services/manager_service
+    build: ./services/management_service
     ports:
-      - "${MANAGER_SERVICE_PORT}:8000"
+      - "${MANAGEMENT_SERVICE_PORT}:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@manager_db:5432/manager_db
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@management_db:5432/management_db
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      KAFKA_GROUP_ID: manager-service
+      KAFKA_GROUP_ID: management-service
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
-      manager_db:
+      management_db:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -215,7 +215,7 @@ services:
 volumes:
   auth_db_data:
   profile_db_data:
-  manager_db_data:
+  management_db_data:
   ts_db_data:
   kafka_data:
 

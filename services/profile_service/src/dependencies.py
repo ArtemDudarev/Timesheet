@@ -30,3 +30,15 @@ def require_roles(*roles: str):
             )
         return payload
     return dependency
+
+
+def require_permission(*permissions: str):
+    def dependency(payload: dict = Depends(get_current_user)) -> dict:
+        user_perms: list = payload.get("permissions", [])
+        if not any(p in user_perms for p in permissions):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Недостаточно прав",
+            )
+        return payload
+    return dependency
