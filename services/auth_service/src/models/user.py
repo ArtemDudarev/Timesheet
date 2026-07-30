@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import Boolean, Date, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -18,6 +18,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Хеш пароля, который был ДО последней смены/сброса — чтобы после выдачи временного
+    # пароля нельзя было тут же вернуть себе старый (см. change_password/reset_password)
+    previous_hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     register_date: Mapped[date] = mapped_column(Date, nullable=False)

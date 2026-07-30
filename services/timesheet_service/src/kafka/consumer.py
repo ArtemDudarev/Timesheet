@@ -7,6 +7,7 @@ from typing import Any
 from aiokafka import AIOKafkaConsumer
 
 from src.kafka.topics import (
+    ABSENCE_STATUS_CHANGED_TOPIC,
     EMPLOYEE_PROFILE_CREATED_TOPIC,
     EMPLOYEE_UPDATED_TOPIC,
     EMPLOYEE_PROJECT_ASSIGNED_TOPIC,
@@ -23,6 +24,7 @@ from src.kafka.topics import (
     USER_CREATED_TOPIC,
 )
 from src.kafka.handlers import (
+    handle_absence_status_changed,
     handle_employee_profile_created,
     handle_employee_updated,
     handle_employee_project_assigned,
@@ -53,6 +55,7 @@ HANDLERS = {
     "project_role.created": handle_project_role_created,
     "project_role.updated": handle_project_role_updated,
     "project_role.deleted": handle_project_role_deleted,
+    "absence.status_changed": handle_absence_status_changed,
     "role.created": handle_role_created,
     "role.updated": handle_role_updated,
     "role.deleted": handle_role_deleted,
@@ -73,6 +76,7 @@ TOPICS = [
     ROLE_CREATED_TOPIC,
     ROLE_UPDATED_TOPIC,
     ROLE_DELETED_TOPIC,
+    ABSENCE_STATUS_CHANGED_TOPIC,
 ]
 
 

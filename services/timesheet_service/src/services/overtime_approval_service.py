@@ -4,8 +4,10 @@ from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.models.employee import Employee
+from src.models.employee_project import Assignment
 from src.models.overtime_approval import ApprovalStatus, OvertimeApproval
 from src.models.time_entry import TimeEntry
 from src.models.timesheet_period import TimesheetPeriod
@@ -15,15 +17,26 @@ class OvertimeApprovalService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_pending(
+    async def get_all(
         self,
+        status: ApprovalStatus | None = ApprovalStatus.PENDING,
         lead_id: uuid.UUID | None = None,
     ) -> list[OvertimeApproval]:
         q = (
             select(OvertimeApproval)
-            .where(OvertimeApproval.status == ApprovalStatus.PENDING)
+            # вложенный selectin через identity map не каскадится на asyncpg — грузим явно
+            .options(
+                selectinload(OvertimeApproval.time_entry)
+                .selectinload(TimeEntry.assignment)
+                .selectinload(Assignment.project),
+                selectinload(OvertimeApproval.time_entry)
+                .selectinload(TimeEntry.assignment)
+                .selectinload(Assignment.project_role),
+            )
             .order_by(OvertimeApproval.created_at)
         )
+        if status is not None:
+            q = q.where(OvertimeApproval.status == status)
         if lead_id is not None:
             q = (
                 q.join(TimeEntry, TimeEntry.id == OvertimeApproval.time_entry_id)

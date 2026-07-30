@@ -1,8 +1,10 @@
 import asyncio
+import os
 import uuid
 from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
@@ -78,6 +80,15 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 app = FastAPI(title="Profile Service", lifespan=lifespan)
+
+_cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(status_router)
 app.include_router(employee_router)

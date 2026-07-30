@@ -47,5 +47,5 @@ class TimeEntry(Base):
     )
     overtime_approval: Mapped[Optional["OvertimeApproval"]] = relationship(
         "OvertimeApproval", back_populates="time_entry", uselist=False, lazy="selectin",
-        passive_deletes=True,
+        cascade="all, delete-orphan", passive_deletes=True,
     )

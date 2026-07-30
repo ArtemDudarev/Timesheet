@@ -7,11 +7,27 @@ from pydantic import BaseModel, ConfigDict, model_validator
 from src.schemas.project_status import ProjectStatusResponse
 
 
+# Определён здесь, а не в schemas/employee.py: импорт оттуда даёт цикл
+# project -> employee -> assignment -> project
+class EmployeeShort(BaseModel):
+    id: uuid.UUID
+    first_name: str
+    last_name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ProjectCreate(BaseModel):
     name: str
     project_status_id: uuid.UUID
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    code: Optional[str] = None
+    color: Optional[str] = None
+    client: Optional[str] = None
+    lead_id: Optional[uuid.UUID] = None
+    budget_hours: Optional[float] = None
+    deadline: Optional[date] = None
 
     @model_validator(mode="after")
     def validate_dates(self) -> "ProjectCreate":
@@ -26,6 +42,12 @@ class ProjectRead(BaseModel):
     project_status: ProjectStatusResponse
     start_date: Optional[date]
     end_date: Optional[date]
+    code: Optional[str]
+    color: Optional[str]
+    client: Optional[str]
+    lead: Optional[EmployeeShort]
+    budget_hours: Optional[float]
+    deadline: Optional[date]
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -35,6 +57,12 @@ class ProjectUpdate(BaseModel):
     project_status_id: Optional[uuid.UUID] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+    code: Optional[str] = None
+    color: Optional[str] = None
+    client: Optional[str] = None
+    lead_id: Optional[uuid.UUID] = None
+    budget_hours: Optional[float] = None
+    deadline: Optional[date] = None
 
     @model_validator(mode="after")
     def validate_dates(self) -> "ProjectUpdate":

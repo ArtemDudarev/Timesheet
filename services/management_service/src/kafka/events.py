@@ -138,6 +138,24 @@ async def publish_role_deleted(
     )
 
 
+def _project_payload(project: Project) -> dict:
+    return {
+        "id": project.id,
+        "name": project.name,
+        "status": project.project_status.name,
+        "status_code": project.project_status.code,
+        "status_id": str(project.status_id),
+        "start_date": project.start_date.isoformat() if project.start_date else None,
+        "end_date": project.end_date.isoformat() if project.end_date else None,
+        "code": project.code,
+        "color": project.color,
+        "client": project.client,
+        "lead_id": str(project.lead_id) if project.lead_id else None,
+        "budget_hours": float(project.budget_hours) if project.budget_hours is not None else None,
+        "deadline": project.deadline.isoformat() if project.deadline else None,
+    }
+
+
 async def publish_project_created(
     producer: KafkaEventProducer,
     project: Project,
@@ -146,14 +164,7 @@ async def publish_project_created(
         PROJECT_CREATED_TOPIC,
         {
             "event_type": "project.created",
-            "project": {
-                "id": project.id,
-                "name": project.name,
-                "status": project.project_status.name,
-                "status_id": str(project.status_id),
-                "start_date": project.start_date.isoformat() if project.start_date else None,
-                "end_date": project.end_date.isoformat() if project.end_date else None,
-            },
+            "project": _project_payload(project),
         },
     )
 
@@ -166,14 +177,7 @@ async def publish_project_updated(
         PROJECT_UPDATED_TOPIC,
         {
             "event_type": "project.updated",
-            "project": {
-                "id": project.id,
-                "name": project.name,
-                "status": project.project_status.name,
-                "status_id": str(project.status_id),
-                "start_date": project.start_date.isoformat() if project.start_date else None,
-                "end_date": project.end_date.isoformat() if project.end_date else None,
-            },
+            "project": _project_payload(project),
         },
     )
 
@@ -248,7 +252,7 @@ async def publish_employee_project_assigned(
             },
             "start_date": assignment.start_date.isoformat() if assignment.start_date else None,
             "end_date": assignment.end_date.isoformat() if assignment.end_date else None,
-            "status": assignment.assignment_status.name,
+            "status": assignment.assignment_status.code,
             "status_id": str(assignment.status_id),
         },
     )

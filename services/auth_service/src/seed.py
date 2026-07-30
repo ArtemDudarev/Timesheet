@@ -57,9 +57,22 @@ SEED_PERMISSIONS = [
     {"code": "timesheet:close_period",   "name": "Закрывать периоды табеля"},
     {"code": "overtime:approve",         "name": "Согласовывать любые переработки"},
     {"code": "overtime:approve_team",    "name": "Согласовывать переработки своей команды"},
+    {"code": "timesheet:approve_period",      "name": "Согласовывать любые периоды табеля"},
+    {"code": "timesheet:approve_period_team", "name": "Согласовывать периоды табеля своей команды"},
     # Сводка
     {"code": "summary:read_any",         "name": "Читать сводку любого сотрудника"},
     {"code": "summary:read_team",        "name": "Читать сводку своей команды"},
+    # Отчётность
+    {"code": "report:read",              "name": "Просматривать отчёты и аналитику"},
+    {"code": "report:manage",            "name": "Управлять плановыми показателями отчётности"},
+    # Отсутствия
+    {"code": "absence:read_any",         "name": "Просматривать любые заявки на отсутствие"},
+    {"code": "absence:read_team",        "name": "Просматривать заявки своей команды"},
+    {"code": "absence:approve",          "name": "Согласовывать любые отсутствия"},
+    {"code": "absence:approve_team",     "name": "Согласовывать отсутствия своей команды"},
+    # Документы
+    {"code": "document:read_any",        "name": "Просматривать любые документы"},
+    {"code": "document:manage_templates", "name": "Управлять шаблонами документов"},
 ]
 
 # ── Маппинги роль → permissions ───────────────────────────────────────────────
@@ -69,8 +82,11 @@ SEED_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "employee:read_team",
         "project:read",
         "timesheet:read_team",
+        "timesheet:approve_period_team",
         "overtime:approve_team",
         "summary:read_team",
+        "absence:read_team",
+        "absence:approve_team",
     ],
     "Менеджер": [
         "user:register",
@@ -90,8 +106,13 @@ SEED_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "timesheet:read_any",
         "timesheet:edit_any",
         "timesheet:close_period",
+        "timesheet:approve_period",
         "overtime:approve",
         "summary:read_any",
+        "report:read",
+        "absence:read_any",
+        "absence:approve",
+        "document:read_any",
     ],
     "HR": [
         "employee:list",
@@ -100,6 +121,9 @@ SEED_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "project:read",
         "timesheet:read_any",
         "summary:read_any",
+        "report:read",
+        "absence:read_any",
+        "document:read_any",
     ],
     "Администратор": [
         "user:register",
@@ -121,8 +145,15 @@ SEED_ROLE_PERMISSIONS: dict[str, list[str]] = {
         "timesheet:read_any",
         "timesheet:edit_any",
         "timesheet:close_period",
+        "timesheet:approve_period",
         "overtime:approve",
         "summary:read_any",
+        "report:read",
+        "report:manage",
+        "absence:read_any",
+        "absence:approve",
+        "document:read_any",
+        "document:manage_templates",
     ],
 }
 

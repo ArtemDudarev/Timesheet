@@ -343,6 +343,9 @@ async def _upsert_project(session: AsyncSession, project_data: dict[str, Any]) -
             status_id=status_id,
             start_date=date.fromisoformat(start_raw) if start_raw else None,
             end_date=date.fromisoformat(end_raw) if end_raw else None,
+            code=project_data.get("code"),
+            color=project_data.get("color"),
+            client=project_data.get("client"),
         )
         session.add(project)
         await session.flush()
@@ -351,6 +354,9 @@ async def _upsert_project(session: AsyncSession, project_data: dict[str, Any]) -
         project.status_id = status_id
         project.start_date = date.fromisoformat(start_raw) if start_raw else None
         project.end_date = date.fromisoformat(end_raw) if end_raw else None
+        project.code = project_data.get("code")
+        project.color = project_data.get("color")
+        project.client = project_data.get("client")
     return project
 
 

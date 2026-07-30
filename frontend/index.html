@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Табель — внутренний портал учёта времени</title>
+
+<template id="__bundler_thumbnail" data-bg-color="#f0f3f9">
+  <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+    <!-- sidebar -->
+    <rect x="4" y="4" width="22" height="72" rx="5" fill="#e2e8f5"/>
+    <rect x="8" y="10" width="14" height="5" rx="2.5" fill="#3b6de8" opacity=".9"/>
+    <rect x="8" y="20" width="10" height="3" rx="1.5" fill="#3b6de8" opacity=".55"/>
+    <rect x="8" y="26" width="12" height="3" rx="1.5" fill="#cbd3e8" opacity=".8"/>
+    <rect x="8" y="32" width="10" height="3" rx="1.5" fill="#cbd3e8" opacity=".8"/>
+    <rect x="8" y="38" width="11" height="3" rx="1.5" fill="#cbd3e8" opacity=".8"/>
+    <rect x="8" y="44" width="9"  height="3" rx="1.5" fill="#cbd3e8" opacity=".8"/>
+    <!-- main -->
+    <rect x="30" y="4" width="86" height="72" rx="5" fill="#fff"/>
+    <!-- topbar -->
+    <rect x="30" y="4" width="86" height="14" rx="5" fill="#f4f6fb"/>
+    <rect x="30" y="13" width="86" height="5" fill="#f4f6fb"/>
+    <rect x="35" y="8" width="28" height="5" rx="2.5" fill="#e2e8f5"/>
+    <circle cx="107" cy="11" r="3" fill="#e2e8f5"/>
+    <circle cx="113" cy="11" r="3" fill="#3b6de8" opacity=".25"/>
+    <!-- content: stat cards -->
+    <rect x="34" y="22" width="18" height="12" rx="3" fill="#f0f3f9"/>
+    <rect x="55" y="22" width="18" height="12" rx="3" fill="#f0f3f9"/>
+    <rect x="76" y="22" width="18" height="12" rx="3" fill="#f0f3f9"/>
+    <rect x="97" y="22" width="15" height="12" rx="3" fill="#f0f3f9"/>
+    <rect x="37" y="27" width="8" height="4" rx="2" fill="#3b6de8" opacity=".6"/>
+    <rect x="58" y="27" width="8" height="4" rx="2" fill="#22c55e" opacity=".6"/>
+    <rect x="79" y="27" width="8" height="4" rx="2" fill="#3b6de8" opacity=".4"/>
+    <rect x="100" y="27" width="8" height="4" rx="2" fill="#f59e0b" opacity=".6"/>
+    <!-- big card -->
+    <rect x="34" y="38" width="78" height="34" rx="4" fill="#f4f6fb"/>
+    <rect x="38" y="43" width="35" height="3" rx="1.5" fill="#3b6de8" opacity=".3"/>
+    <rect x="38" y="49" width="60" height="2" rx="1" fill="#cbd3e8"/>
+    <rect x="38" y="54" width="50" height="2" rx="1" fill="#cbd3e8"/>
+    <rect x="38" y="59" width="55" height="2" rx="1" fill="#cbd3e8"/>
+    <rect x="38" y="64" width="42" height="2" rx="1" fill="#cbd3e8"/>
+    <!-- accent clock icon in sidebar -->
+    <circle cx="15" cy="60" r="4" fill="#3b6de8" opacity=".18"/>
+    <rect x="8" y="68" width="14" height="2" rx="1" fill="#3b6de8" opacity=".22"/>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ============ DESIGN SYSTEM — cold blue-steel, light, Linear/Notion clean ============ */
+:root{
+  /* accent — overridden by Tweaks */
+  --accent: oklch(0.55 0.13 250);
+  --accent-strong: oklch(0.47 0.14 250);
+  --accent-soft: oklch(0.95 0.03 250);
+  --accent-softer: oklch(0.975 0.018 250);
+  --accent-ring: oklch(0.55 0.13 250 / 0.30);
+
+  /* cold neutral scale */
+  --bg: oklch(0.985 0.004 245);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.975 0.005 245);
+  --surface-3: oklch(0.955 0.007 245);
+  --border: oklch(0.915 0.008 245);
+  --border-strong: oklch(0.86 0.012 245);
+
+  --text: oklch(0.255 0.02 255);
+  --text-2: oklch(0.45 0.018 255);
+  --text-3: oklch(0.60 0.015 255);
+  --text-on-accent: oklch(0.99 0.005 250);
+
+  /* status */
+  --green: oklch(0.62 0.13 155);
+  --green-soft: oklch(0.95 0.04 155);
+  --amber: oklch(0.74 0.13 75);
+  --amber-soft: oklch(0.95 0.05 80);
+  --red: oklch(0.60 0.18 22);
+  --red-soft: oklch(0.95 0.04 22);
+  --violet: oklch(0.58 0.15 295);
+  --violet-soft: oklch(0.95 0.04 295);
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px oklch(0.4 0.03 255 / 0.05), 0 1px 1px oklch(0.4 0.03 255 / 0.04);
+  --shadow-md: 0 4px 12px oklch(0.4 0.03 255 / 0.08), 0 1px 3px oklch(0.4 0.03 255 / 0.06);
+  --shadow-lg: 0 12px 32px oklch(0.4 0.03 255 / 0.12), 0 2px 8px oklch(0.4 0.03 255 / 0.07);
+
+  /* weekend */
+  --weekend-soft: oklch(0.965 0.006 245);
+  --weekend: oklch(0.88 0.01 245);
+
+  --row-h: 38px;        /* density-driven */
+  --pad: 24px;
+  --font: 'Golos Text', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+[data-density="compact"]{ --row-h: 32px; --pad: 18px; }
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; height:100%; }
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  font-size:14px;
+  line-height:1.45;
+}
+#root{ height:100%; }
+button{ font-family:inherit; }
+input,select,textarea{ font-family:inherit; }
+::selection{ background:var(--accent-soft); }
+
+/* scrollbars */
+*::-webkit-scrollbar{ width:10px; height:10px; }
+*::-webkit-scrollbar-thumb{ background:var(--surface-3); border-radius:20px; border:2px solid transparent; background-clip:padding-box; }
+*::-webkit-scrollbar-thumb:hover{ background:var(--border-strong); }
+*::-webkit-scrollbar-track{ background:transparent; }
+
+/* ---- primitives ---- */
+.card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); }
+.muted{ color:var(--text-2); }
+.mono{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
+.tnum{ font-variant-numeric:tabular-nums; }
+
+.btn{
+  display:inline-flex; align-items:center; gap:8px; justify-content:center;
+  height:38px; padding:0 16px; border-radius:var(--radius-sm);
+  border:1px solid var(--border-strong); background:var(--surface); color:var(--text);
+  font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap;
+  transition:background .14s ease, border-color .14s ease, box-shadow .14s ease, transform .04s ease;
+}
+.btn:hover{ background:var(--surface-2); border-color:var(--text-3); }
+.btn:active{ transform:translateY(0.5px); }
+.btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--text-on-accent); box-shadow:var(--shadow-sm); }
+.btn.primary:hover{ background:var(--accent-strong); border-color:var(--accent-strong); }
+.btn.ghost{ border-color:transparent; background:transparent; color:var(--text-2); }
+.btn.ghost:hover{ background:var(--surface-2); color:var(--text); }
+.btn.sm{ height:30px; padding:0 11px; font-size:12.5px; gap:6px; }
+.btn.icon{ width:38px; padding:0; }
+.btn.sm.icon{ width:30px; }
+
+.badge{
+  display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px;
+  border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap;
+  background:var(--surface-3); color:var(--text-2);
+}
+.badge .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+.badge.green{ background:var(--green-soft); color:oklch(0.42 0.11 155); }
+.badge.amber{ background:var(--amber-soft); color:oklch(0.48 0.12 70); }
+.badge.red{ background:var(--red-soft); color:oklch(0.50 0.16 25); }
+.badge.violet{ background:var(--violet-soft); color:oklch(0.46 0.14 295); }
+.badge.accent{ background:var(--accent-soft); color:var(--accent-strong); }
+
+.input{
+  height:38px; padding:0 12px; border-radius:var(--radius-sm);
+  border:1px solid var(--border-strong); background:var(--surface); color:var(--text);
+  font-size:14px; width:100%; outline:none; transition:border-color .14s, box-shadow .14s;
+}
+.input:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-ring); }
+.input::placeholder{ color:var(--text-3); }
+
+.avatar{
+  display:inline-flex; align-items:center; justify-content:center; flex:none;
+  border-radius:50%; color:#fff; font-weight:700; letter-spacing:-.02em;
+  background:var(--accent); overflow:hidden;
+}
+
+.progress{ height:7px; border-radius:999px; background:var(--surface-3); overflow:hidden; }
+.progress > span{ display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .4s ease; }
+
+.divider{ height:1px; background:var(--border); border:0; margin:0; }
+
+/* segmented control */
+.seg{ display:inline-flex; padding:3px; gap:2px; background:var(--surface-3); border-radius:9px; }
+.seg button{ border:0; background:transparent; padding:6px 12px; border-radius:7px; font-size:13px; font-weight:600; color:var(--text-2); cursor:pointer; transition:.14s; }
+.seg button.on{ background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm); }
+.seg button:hover:not(.on){ color:var(--text); }
+
+/* table */
+.tbl{ width:100%; border-collapse:separate; border-spacing:0; }
+.tbl th{ text-align:left; font-size:11.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--text-3); padding:0 14px 10px; }
+.tbl td{ padding:0 14px; height:var(--row-h); border-top:1px solid var(--border); font-size:13.5px; }
+.tbl tbody tr:hover td{ background:var(--surface-2); }
+
+.fade-in{ animation:fadeIn .32s ease both; }
+@keyframes fadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+
+.skel{ background:linear-gradient(90deg,var(--surface-2),var(--surface-3),var(--surface-2)); background-size:200% 100%; animation:sk 1.4s infinite; border-radius:6px; }
+@keyframes sk{ 0%{ background-position:200% 0; } 100%{ background-position:-200% 0; } }
+
+a{ color:var(--accent-strong); }
+h1,h2,h3,h4{ margin:0; font-weight:700; letter-spacing:-.015em; color:var(--text); }
+
+/* ============ DARK THEME OVERRIDES ============ */
+[data-theme="dark"]{
+  --weekend-soft: oklch(0.20 0.012 255);
+  --weekend: oklch(0.30 0.012 255);
+  --bg: oklch(0.135 0.013 255);
+  --surface: oklch(0.175 0.013 255);
+  --surface-2: oklch(0.215 0.013 255);
+  --surface-3: oklch(0.258 0.013 255);
+  --border: oklch(0.285 0.013 255);
+  --border-strong: oklch(0.340 0.013 255);
+
+  --text: oklch(0.940 0.006 255);
+  --text-2: oklch(0.700 0.010 255);
+  --text-3: oklch(0.500 0.010 255);
+
+  --green-soft: oklch(0.235 0.065 155);
+  --amber-soft: oklch(0.235 0.065 80);
+  --red-soft:   oklch(0.235 0.070 22);
+  --violet-soft:oklch(0.235 0.065 295);
+
+  --shadow-sm: 0 1px 2px oklch(0.04 0.02 255 / 0.45), 0 1px 1px oklch(0.04 0.02 255 / 0.30);
+  --shadow-md: 0 4px 14px oklch(0.04 0.02 255 / 0.60), 0 1px 3px oklch(0.04 0.02 255 / 0.40);
+  --shadow-lg: 0 14px 36px oklch(0.04 0.02 255 / 0.70), 0 2px 8px oklch(0.04 0.02 255 / 0.50);
+}
+[data-theme="dark"] .badge.green  { color: oklch(0.78 0.12 155); }
+[data-theme="dark"] .badge.amber  { color: oklch(0.82 0.12 75);  }
+[data-theme="dark"] .badge.red    { color: oklch(0.78 0.15 25);  }
+[data-theme="dark"] .badge.violet { color: oklch(0.78 0.13 295); }
+[data-theme="dark"] .skel{ background:linear-gradient(90deg,var(--surface-2),var(--surface-3),var(--surface-2)); background-size:200% 100%; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="api.js"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="data.js"></script>
+<script type="text/babel" src="ts-datepicker.jsx"></script>
+<script type="text/babel" src="ui.jsx"></script>
+<script type="text/babel" src="screen-login.jsx"></script>
+<script type="text/babel" src="screen-profile.jsx"></script>
+<script type="text/babel" src="screen-timesheet.jsx"></script>
+<script type="text/babel" src="screen-manager.jsx"></script>
+<script type="text/babel" src="screen-reports.jsx"></script>
+<script type="text/babel" src="screen-docs.jsx"></script>
+<script type="text/babel" src="screen-chat.jsx"></script>
+<script type="text/babel" src="screen-absences.jsx"></script>
+<script type="text/babel" src="notifications.jsx"></script>
+<script type="text/babel" src="employee-card.jsx"></script>
+<script type="text/babel" src="screen-settings.jsx"></script>
+<script type="text/babel" src="screen-admin.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

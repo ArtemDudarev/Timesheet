@@ -1,11 +1,12 @@
 import random
 import secrets
+import string
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
-from sqlalchemy import delete, select, or_
+from sqlalchemy import delete, func, select, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +21,21 @@ from src.schemas.employee import UserCreate
 REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Спецсимволы из набора, допустимого _validate_password в schemas/employee.py
+_TEMP_PASSWORD_SPECIALS = "!@#$%^&*()-_=+"
+
+
+def _generate_temp_password() -> str:
+    """Случайный пароль без предсказуемого префикса — удовлетворяет _validate_password."""
+    chars = [
+        *(secrets.choice(string.ascii_uppercase) for _ in range(2)),
+        *(secrets.choice(string.ascii_lowercase) for _ in range(4)),
+        *(secrets.choice(string.digits) for _ in range(3)),
+        secrets.choice(_TEMP_PASSWORD_SPECIALS),
+    ]
+    secrets.SystemRandom().shuffle(chars)
+    return "".join(chars)
 
 
 class UserService:
@@ -36,9 +52,14 @@ class UserService:
         pwd_context.dummy_verify()
 
     async def get_by_identity(self, login_identity: str) -> User | None:
+        # Email вводится вручную и нечувствителен к регистру; номер сотрудника — только цифры,
+        # регистр для него роли не играет
         result = await self.session.execute(
             select(User).where(
-                or_(User.email == login_identity, User.number == login_identity)
+                or_(
+                    func.lower(User.email) == login_identity.lower(),
+                    User.number == login_identity,
+                )
             )
         )
         return result.scalar_one_or_none()
@@ -74,15 +95,15 @@ class UserService:
         await self.session.execute(
             delete(RefreshToken).where(
                 RefreshToken.user_id == user_id,
-                RefreshToken.expires_at < datetime.utcnow(),
+                RefreshToken.expires_at < datetime.now(timezone.utc),
             )
         )
         token = secrets.token_urlsafe(32)
         self.session.add(RefreshToken(
             user_id=user_id,
             token=token,
-            expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-            created_at=datetime.utcnow(),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+            created_at=datetime.now(timezone.utc),
             ip_address=ip_address,
             user_agent=user_agent,
         ))
@@ -101,7 +122,9 @@ class UserService:
         rt = result.scalar_one_or_none()
         if rt is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Недействительный refresh token")
-        if rt.expires_at < datetime.utcnow():
+        # SQLite отдаёт naive datetime, Postgres — aware; нормализуем к UTC
+        expires_at = rt.expires_at if rt.expires_at.tzinfo else rt.expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < datetime.now(timezone.utc):
             await self.session.delete(rt)
             await self.session.commit()
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token истёк")
@@ -125,8 +148,8 @@ class UserService:
         self.session.add(RefreshToken(
             user_id=user.id,
             token=new_token,
-            expires_at=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
-            created_at=datetime.utcnow(),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+            created_at=datetime.now(timezone.utc),
             ip_address=ip_address or prev_ip,
             user_agent=user_agent or prev_ua,
         ))
@@ -143,7 +166,7 @@ class UserService:
             select(RefreshToken)
             .where(
                 RefreshToken.user_id == user_id,
-                RefreshToken.expires_at > datetime.utcnow(),
+                RefreshToken.expires_at > datetime.now(timezone.utc),
             )
             .order_by(RefreshToken.created_at.desc())
         )
@@ -207,6 +230,14 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
         if not self.verify_password(current_password, user.hashed_password):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Текущий пароль неверен")
+        # PasswordChange.passwords_differ уже отсеял current==new; здесь — против возврата
+        # к паролю, который был ДО этого (например, до сброса временным паролем)
+        if user.previous_hashed_password and self.verify_password(new_password, user.previous_hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Новый пароль не должен совпадать с предыдущим паролем",
+            )
+        user.previous_hashed_password = user.hashed_password
         user.hashed_password = self.hash_password(new_password)
         user.must_change_password = False
         await self.session.execute(delete(RefreshToken).where(RefreshToken.user_id == user_id))
@@ -216,7 +247,10 @@ class UserService:
         user = await self.session.get(User, user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
-        temp_password = f"Tx1!{secrets.token_hex(6)}"
+        temp_password = _generate_temp_password()
+        # Сохраняем хеш пароля, который заменяем, — иначе после форс-смены нечего
+        # будет сверить с "паролем до сброса"
+        user.previous_hashed_password = user.hashed_password
         user.hashed_password = self.hash_password(temp_password)
         user.must_change_password = True
         await self.session.execute(delete(RefreshToken).where(RefreshToken.user_id == user_id))

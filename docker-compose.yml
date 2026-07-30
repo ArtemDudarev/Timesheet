@@ -47,6 +47,9 @@ services:
       JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}  # Задать в .env для VPS
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # Лимит считается по IP: ручной прогон с перелогинами упирается в дефолтные 5/мин
+      LOGIN_RATE_LIMIT: ${LOGIN_RATE_LIMIT:-30/minute}
+      RESET_REQUEST_RATE_LIMIT: ${RESET_REQUEST_RATE_LIMIT:-10/minute}
     depends_on:
       auth_db:
         condition: service_healthy
@@ -144,6 +147,158 @@ services:
         condition: service_healthy
 
   # =========================
+  # ABSENCE DB
+  # =========================
+  absence_db:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: absence_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${ABSENCE_DB_PORT}:5432"
+    volumes:
+      - absence_db_data:/var/lib/postgresql/data
+
+  absence_service:
+    <<: *service-common
+    build: ./services/absence_service
+    ports:
+      - "${ABSENCE_SERVICE_PORT}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@absence_db:5432/absence_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_GROUP_ID: absence-service
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      absence_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # =========================
+  # REPORTING DB
+  # =========================
+  reporting_db:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: reporting_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${REPORTING_DB_PORT}:5432"
+    volumes:
+      - reporting_db_data:/var/lib/postgresql/data
+
+  reporting_service:
+    <<: *service-common
+    build: ./services/reporting_service
+    ports:
+      - "${REPORTING_SERVICE_PORT}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@reporting_db:5432/reporting_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_GROUP_ID: reporting-service
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      reporting_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # =========================
+  # DOCUMENT DB
+  # =========================
+  document_db:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: document_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DOCUMENT_DB_PORT}:5432"
+    volumes:
+      - document_db_data:/var/lib/postgresql/data
+
+  document_service:
+    <<: *service-common
+    build: ./services/document_service
+    ports:
+      - "${DOCUMENT_SERVICE_PORT}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@document_db:5432/document_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_GROUP_ID: document-service
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - document_files:/data/files
+    depends_on:
+      document_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # =========================
+  # NOTIFICATION DB
+  # =========================
+  notification_db:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${NOTIFICATION_DB_PORT}:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+
+  notification_service:
+    <<: *service-common
+    build: ./services/notification_service
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@notification_db:5432/notification_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_GROUP_ID: notification-service
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      notification_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # =========================
+  # CHAT DB
+  # =========================
+  chat_db:
+    <<: *postgres-common
+    environment:
+      POSTGRES_DB: chat_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${CHAT_DB_PORT}:5432"
+    volumes:
+      - chat_db_data:/var/lib/postgresql/data
+
+  chat_service:
+    <<: *service-common
+    build: ./services/chat_service
+    ports:
+      - "${CHAT_SERVICE_PORT}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@chat_db:5432/chat_db
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_GROUP_ID: chat-service
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      chat_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  # =========================
   # KAFKA
   # =========================
   kafka:
@@ -217,6 +372,12 @@ volumes:
   profile_db_data:
   management_db_data:
   ts_db_data:
+  absence_db_data:
+  reporting_db_data:
+  document_db_data:
+  document_files:
+  notification_db_data:
+  chat_db_data:
   kafka_data:
 
 networks:

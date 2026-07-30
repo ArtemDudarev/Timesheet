@@ -36,11 +36,30 @@ class SummaryService:
 
         norm = await self._calc_norm(year, month)
         logged = self._sum_entries(period.entries)
-        utilization_pct = float(logged / norm * 100) if norm else 0.0
         remaining = max(Decimal("0"), norm - logged)
 
-        prev_delta = await self._prev_utilization_delta(
-            employee_id, year, month, norm, utilization_pct
+        # utilization_pct = "Загрузка" (донат в шапке профиля) — темп ТЕКУЩЕГО месяца.
+        # Для текущего месяца норма берётся не целиком, а "на сегодня" — иначе 1-го числа
+        # при полной загрузке показатель был бы 5-10%. Для прошлых месяцев — норма целиком.
+        today = date.today()
+        if (year, month) == (today.year, today.month):
+            elapsed_norm = await self._calc_norm(year, month, upto=today)
+        else:
+            elapsed_norm = norm
+        utilization_pct = float(logged / elapsed_norm * 100) if elapsed_norm else 0.0
+
+        # "Утилизация" — отдельная от текущей "загрузки" метрика: всегда за прошлый ЗАВЕРШЁННЫЙ
+        # месяц (без шума от неполного текущего месяца), с трендом относительно позапрошлого
+        prev_month, prev_year = (month - 1, year) if month > 1 else (12, year - 1)
+        prev2_month, prev2_year = (
+            (prev_month - 1, prev_year) if prev_month > 1 else (12, prev_year - 1)
+        )
+        prev_month_pct = await self._month_utilization(employee_id, prev_year, prev_month)
+        prev2_month_pct = await self._month_utilization(employee_id, prev2_year, prev2_month)
+        utilization_delta = (
+            round(prev_month_pct - prev2_month_pct, 1)
+            if prev_month_pct is not None and prev2_month_pct is not None
+            else None
         )
 
         active_count, total_count = await self._project_counts(employee_id)
@@ -56,7 +75,10 @@ class SummaryService:
             logged_hours=logged,
             norm_hours=norm,
             utilization_pct=round(utilization_pct, 1),
-            utilization_delta=prev_delta,
+            prev_month_utilization_pct=(
+                round(prev_month_pct, 1) if prev_month_pct is not None else None
+            ),
+            utilization_delta=utilization_delta,
             remaining_hours=remaining,
             active_projects_count=active_count,
             total_projects_count=total_count,
@@ -67,9 +89,11 @@ class SummaryService:
 
     # ── helpers ───────────────────────────────────────────────────────────────
 
-    async def _calc_norm(self, year: int, month: int) -> Decimal:
+    async def _calc_norm(self, year: int, month: int, upto: Optional[date] = None) -> Decimal:
         first_day = date(year, month, 1)
         last_day = date(year, month, monthrange(year, month)[1])
+        if upto is not None and upto < last_day:
+            last_day = upto
 
         result = await self.db.execute(
             select(ProductionCalendar).where(
@@ -97,43 +121,40 @@ class SummaryService:
     def _sum_entries(self, entries) -> Decimal:
         return sum((e.spend_time for e in entries), Decimal("0"))
 
-    async def _prev_utilization_delta(
-        self,
-        employee_id: uuid.UUID,
-        year: int,
-        month: int,
-        current_norm: Decimal,
-        current_pct: float,
+    async def _month_utilization(
+        self, employee_id: uuid.UUID, year: int, month: int
     ) -> Optional[float]:
-        prev_month = month - 1 if month > 1 else 12
-        prev_year = year if month > 1 else year - 1
-
+        """Утилизация за ЗАВЕРШЁННЫЙ месяц — всегда от полной нормы (месяц уже прошёл
+        целиком, поэтому "на сегодня" здесь не имеет смысла)."""
         result = await self.db.execute(
             select(TimesheetPeriod).where(
                 TimesheetPeriod.employee_id == employee_id,
-                TimesheetPeriod.year == prev_year,
-                TimesheetPeriod.month == prev_month,
+                TimesheetPeriod.year == year,
+                TimesheetPeriod.month == month,
             )
         )
-        prev_period = result.scalar_one_or_none()
-        if prev_period is None:
+        period = result.scalar_one_or_none()
+        if period is None:
             return None
 
-        prev_norm = await self._calc_norm(prev_year, prev_month)
-        if not prev_norm:
+        norm = await self._calc_norm(year, month)
+        if not norm:
             return None
 
-        prev_logged = self._sum_entries(prev_period.entries)
-        prev_pct = float(prev_logged / prev_norm * 100)
-        return round(current_pct - prev_pct, 1)
+        logged = self._sum_entries(period.entries)
+        return float(logged / norm * 100)
 
     async def _project_counts(self, employee_id: uuid.UUID):
+        # "Активных" — по статусу самого ПРОЕКТА (project.status_code == ACTIVE), а не по
+        # статусу назначения сотрудника: сотрудник может быть привлечён (ACTIVE-назначение)
+        # к проекту, который сам ещё в статусе "Планируется"
         result = await self.db.execute(
             select(Assignment).where(Assignment.employee_id == employee_id)
         )
         assignments = result.scalars().all()
-        total = len(assignments)
-        active = sum(1 for a in assignments if a.status == "ACTIVE")
+        projects = {a.project_id: a.project for a in assignments}
+        total = len(projects)
+        active = sum(1 for p in projects.values() if p.status_code == "ACTIVE")
         return active, total
 
     async def _weekly_dynamics(self, employee_id: uuid.UUID):

@@ -12,6 +12,7 @@ from src.services.project_service import ProjectService
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
 _manager = Depends(require_permission("project:manage"))
+_reader = Depends(require_permission("project:read"))
 
 
 @router.post("/", response_model=ProjectRead, status_code=status.HTTP_201_CREATED)
@@ -33,7 +34,7 @@ async def create_project(
 @router.get("/", response_model=list[ProjectRead])
 async def get_all_projects(
     session: AsyncSession = Depends(get_async_session),
-    _: dict = _manager,
+    _: dict = _reader,
 ):
     service = ProjectService(session)
     return await service.get_all_projects()
@@ -43,7 +44,7 @@ async def get_all_projects(
 async def get_project_by_id(
     project_id: UUID,
     session: AsyncSession = Depends(get_async_session),
-    _: dict = _manager,
+    _: dict = _reader,
 ):
     service = ProjectService(session)
     project = await service.get_by_id(project_id)

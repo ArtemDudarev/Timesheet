@@ -13,6 +13,9 @@ from src.services.role_service import RoleService
 router = APIRouter(prefix="/roles", tags=["Roles"])
 
 _manager = Depends(require_permission("system:manage"))
+# Каталог ролей нужен менеджеру для регистрации и назначения ролей (user:register /
+# employee:assign_roles), поэтому чтение мягче мутаций — как у skills/grades/departments
+_viewer = Depends(require_permission("employee:list"))
 
 
 @router.post("/", response_model=RoleRead, status_code=status.HTTP_201_CREATED)
@@ -33,7 +36,7 @@ async def create_role(
 @router.get("/", response_model=list[RoleRead])
 async def get_roles(
     session: AsyncSession = Depends(get_async_session),
-    _: dict = _manager,
+    _: dict = _viewer,
 ):
     service = RoleService(session)
     return await service.get_all()
@@ -43,7 +46,7 @@ async def get_roles(
 async def get_role(
     role_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
-    _: dict = _manager,
+    _: dict = _viewer,
 ):
     service = RoleService(session)
     role = await service.get_by_id(role_id)

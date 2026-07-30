@@ -13,6 +13,13 @@ PROJECT_ROLE_DELETED_TOPIC = "project_role.deleted"
 ROLE_CREATED_TOPIC = "role.created"
 ROLE_UPDATED_TOPIC = "role.updated"
 ROLE_DELETED_TOPIC = "role.deleted"
+ABSENCE_STATUS_CHANGED_TOPIC = "absence.status_changed"
 
 # Publish
 OVERTIME_CREATED_TOPIC = "timesheet.overtime_created"
+ENTRY_CREATED_TOPIC = "timesheet.entry_created"
+ENTRY_UPDATED_TOPIC = "timesheet.entry_updated"
+ENTRY_DELETED_TOPIC = "timesheet.entry_deleted"
+PERIOD_SUBMITTED_TOPIC = "timesheet.period_submitted"
+PERIOD_APPROVED_TOPIC = "timesheet.period_approved"
+PERIOD_REJECTED_TOPIC = "timesheet.period_rejected"

@@ -22,6 +22,7 @@ class EmployeeSummaryResponse(BaseModel):
     logged_hours: Decimal
     norm_hours: Decimal
     utilization_pct: float
+    prev_month_utilization_pct: Optional[float] = None
     utilization_delta: Optional[float] = None
     remaining_hours: Decimal
     active_projects_count: int
