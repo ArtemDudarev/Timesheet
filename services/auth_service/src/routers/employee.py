@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_async_session
 from src.dependencies import get_current_user, require_permission, require_roles
 from src.kafka.events import publish_user_created
-from src.limiter import limiter
+from src.limiter import LOGIN_RATE_LIMIT, limiter
 from src.schemas.employee import PasswordChange, PasswordResetResponse, TokenResponse, UserCreate, UserLogin, UserRead
 from src.security import create_access_token
 from src.services.employee_service import UserService
@@ -45,7 +45,7 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit("5/minute")
+@limiter.limit(LOGIN_RATE_LIMIT)
 async def login(
     request: Request,
     payload: UserLogin,

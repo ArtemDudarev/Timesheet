@@ -55,6 +55,7 @@ async def update_entry(
     period_id: uuid.UUID,
     entry_id: uuid.UUID,
     data: TimeEntryUpdate,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user),
 ):
@@ -65,7 +66,7 @@ async def update_entry(
     entry = await svc.get_by_id(entry_id)
     if not entry or entry.timesheet_period_id != period_id:
         raise HTTPException(status_code=404, detail="Запись не найдена")
-    entry = await svc.update(entry, data)
+    entry = await svc.update(entry, data, producer=request.app.state.kafka_producer)
     await session.commit()
     return entry
 
@@ -74,6 +75,7 @@ async def update_entry(
 async def delete_entry(
     period_id: uuid.UUID,
     entry_id: uuid.UUID,
+    request: Request,
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = Depends(get_current_user),
 ):
@@ -84,5 +86,5 @@ async def delete_entry(
     entry = await svc.get_by_id(entry_id)
     if not entry or entry.timesheet_period_id != period_id:
         raise HTTPException(status_code=404, detail="Запись не найдена")
-    await svc.delete(entry)
+    await svc.delete(entry, producer=request.app.state.kafka_producer)
     await session.commit()

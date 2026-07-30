@@ -35,6 +35,18 @@ async def test_get_roles(client, admin_token, manager_role, employee_role):
     assert len(response.json()) == 2
 
 
+async def test_get_roles_as_manager(client, manager_token, manager_role, employee_role):
+    """Чтение каталога ролей доступно с employee:list — без system:manage."""
+    response = await client.get("/roles/", headers={"Authorization": f"Bearer {manager_token}"})
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+async def test_get_roles_not_viewer(client, employee_token):
+    response = await client.get("/roles/", headers={"Authorization": f"Bearer {employee_token}"})
+    assert response.status_code == 403
+
+
 async def test_get_roles_empty(client, admin_token):
     response = await client.get("/roles/", headers={"Authorization": f"Bearer {admin_token}"})
     assert response.status_code == 200

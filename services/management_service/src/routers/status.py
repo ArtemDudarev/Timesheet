@@ -13,6 +13,9 @@ from src.services.status_service import StatusService
 router = APIRouter(prefix="/employee-statuses", tags=["Employee Statuses"])
 
 _manager = Depends(require_permission("system:manage"))
+# Каталог статусов нужен менеджеру для смены статуса сотрудника (employee:assign_status),
+# поэтому чтение мягче мутаций — как у skills/grades/departments
+_viewer = Depends(require_permission("employee:list"))
 
 
 @router.post("/", response_model=StatusRead, status_code=status.HTTP_201_CREATED)
@@ -33,7 +36,7 @@ async def add_status(
 @router.get("/", response_model=list[StatusRead])
 async def read_statuses(
     session: AsyncSession = Depends(get_async_session),
-    _: dict = _manager,
+    _: dict = _viewer,
 ):
     service = StatusService(session)
     return await service.get_all()
@@ -43,7 +46,7 @@ async def read_statuses(
 async def get_status(
     status_id: uuid.UUID,
     session: AsyncSession = Depends(get_async_session),
-    _: dict = _manager,
+    _: dict = _viewer,
 ):
     service = StatusService(session)
     db_status = await service.get_by_id(status_id)

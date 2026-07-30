@@ -33,5 +33,5 @@ class OvertimeApproval(Base):
     resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     time_entry: Mapped["TimeEntry"] = relationship(
-        "TimeEntry", back_populates="overtime_approval"
+        "TimeEntry", back_populates="overtime_approval", lazy="selectin"
     )

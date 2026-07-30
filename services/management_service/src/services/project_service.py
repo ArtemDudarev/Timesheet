@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.models.employee import Employee
 from src.models.project import Project
 from src.models.project_status import ProjectStatus
 from src.schemas.project import ProjectCreate, ProjectUpdate
@@ -28,20 +29,33 @@ class ProjectService:
 
     async def create_project(self, data: ProjectCreate) -> Project:
         await self._validate_status(data.project_status_id)
+        if data.lead_id is not None:
+            await self._validate_lead(data.lead_id)
         new_project = Project(
             name=data.name,
             status_id=data.project_status_id,
             start_date=data.start_date,
             end_date=data.end_date,
+            code=data.code,
+            color=data.color,
+            client=data.client,
+            lead_id=data.lead_id,
+            budget_hours=data.budget_hours,
+            deadline=data.deadline,
         )
         try:
             self.session.add(new_project)
             await self.session.commit()
-            await self.session.refresh(new_project, attribute_names=["project_status"])
+            await self.session.refresh(new_project, attribute_names=["project_status", "lead"])
             return new_project
         except IntegrityError as e:
             await self.session.rollback()
             error_msg = str(e.orig).lower()
+            if "code" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Код проекта '{data.code}' уже используется"
+                )
             if "name" in error_msg or "project" in error_msg:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -58,15 +72,23 @@ class ProjectService:
         if "project_status_id" in update_data:
             await self._validate_status(update_data["project_status_id"])
             update_data["status_id"] = update_data.pop("project_status_id")
+        if update_data.get("lead_id") is not None:
+            await self._validate_lead(update_data["lead_id"])
         for field, value in update_data.items():
             setattr(project, field, value)
 
         try:
             await self.session.commit()
-            await self.session.refresh(project, attribute_names=["project_status"])
+            await self.session.refresh(project, attribute_names=["project_status", "lead"])
             return project
-        except IntegrityError:
+        except IntegrityError as e:
             await self.session.rollback()
+            error_msg = str(e.orig).lower()
+            if "code" in error_msg:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Код проекта '{update_data.get('code')}' уже используется"
+                )
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ошибка при обновлении проекта")
 
     async def _validate_status(self, status_id: UUID) -> None:
@@ -75,6 +97,14 @@ class ProjectService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Статус проекта не найден",
+            )
+
+    async def _validate_lead(self, lead_id: UUID) -> None:
+        lead = await self.session.get(Employee, lead_id)
+        if not lead:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Сотрудник-руководитель проекта не найден",
             )
 
     async def delete_project(self, project_id: UUID) -> bool:

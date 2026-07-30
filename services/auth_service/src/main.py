@@ -19,9 +19,11 @@ from src.models.role import Role
 from src.models.role_permission import role_permission
 from src.models.permission import Permission
 from src.models.refresh_token import RefreshToken
+from src.models.password_reset_request import PasswordResetRequest
 from src.routers.employee import router as auth_router
 from src.routers.admin import router as admin_router
 from src.routers.session import router as session_router
+from src.routers.password_reset_request import router as reset_request_router
 from src.seed import seed_demo_users, seed_permissions, seed_role_permissions, seed_roles
 
 
@@ -67,3 +69,4 @@ def read_root():
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(session_router)
+app.include_router(reset_request_router)

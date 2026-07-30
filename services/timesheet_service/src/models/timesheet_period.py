@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, UniqueConstraint, Uuid
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Text, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -12,6 +12,13 @@ from .base import Base
 class PeriodStatus(str, enum.Enum):
     OPEN = "Открыт"
     CLOSED = "Закрыт"
+
+
+class SubmissionStatus(str, enum.Enum):
+    DRAFT = "Черновик"
+    PENDING = "На согласовании"
+    APPROVED = "Согласован"
+    REJECTED = "Отклонён"
 
 
 class TimesheetPeriod(Base):
@@ -33,6 +40,15 @@ class TimesheetPeriod(Base):
     )
     closed_by: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
     closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    submission_status: Mapped[SubmissionStatus] = mapped_column(
+        Enum(SubmissionStatus, name="submission_status"),
+        nullable=False,
+        default=SubmissionStatus.DRAFT,
+    )
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    rejection_comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     employee: Mapped["Employee"] = relationship("Employee", lazy="selectin")
     entries: Mapped[list["TimeEntry"]] = relationship(

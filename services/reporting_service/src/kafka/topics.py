@@ -1,0 +1,12 @@
+# Consume — реплики
+EMPLOYEE_PROFILE_CREATED_TOPIC = "employee.profile_created"
+EMPLOYEE_UPDATED_TOPIC = "employee.updated"
+DEPARTMENT_CREATED_TOPIC = "department.created"
+DEPARTMENT_UPDATED_TOPIC = "department.updated"
+DEPARTMENT_DELETED_TOPIC = "department.deleted"
+PROJECT_CREATED_TOPIC = "project.created"
+PROJECT_UPDATED_TOPIC = "project.updated"
+PROJECT_DELETED_TOPIC = "project.deleted"
+ENTRY_CREATED_TOPIC = "timesheet.entry_created"
+ENTRY_UPDATED_TOPIC = "timesheet.entry_updated"
+ENTRY_DELETED_TOPIC = "timesheet.entry_deleted"

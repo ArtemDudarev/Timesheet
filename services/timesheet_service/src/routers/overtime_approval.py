@@ -1,11 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
 from src.dependencies import get_current_user, require_permission
 from src.models.employee import Employee
+from src.models.overtime_approval import ApprovalStatus
 from src.schemas.overtime_approval import OvertimeApprovalResolve, OvertimeApprovalResponse
 from src.services.overtime_approval_service import OvertimeApprovalService
 
@@ -15,7 +16,11 @@ _approver = Depends(require_permission("overtime:approve", "overtime:approve_tea
 
 
 @router.get("/", response_model=list[OvertimeApprovalResponse])
-async def get_pending_approvals(
+async def get_approvals(
+    status_filter: ApprovalStatus | None = Query(
+        ApprovalStatus.PENDING, alias="status"
+    ),
+    all_statuses: bool = False,
     session: AsyncSession = Depends(get_async_session),
     current_user: dict = _approver,
 ):
@@ -23,7 +28,9 @@ async def get_pending_approvals(
     perms = set(current_user.get("permissions", []))
     # Тимлид с только командным правом видит только свою команду
     lead_id = None if "overtime:approve" in perms else uuid.UUID(current_user["sub"])
-    return await svc.get_pending(lead_id=lead_id)
+    return await svc.get_all(
+        status=None if all_statuses else status_filter, lead_id=lead_id
+    )
 
 
 async def _assert_team_access(

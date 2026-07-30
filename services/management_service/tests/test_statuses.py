@@ -40,6 +40,18 @@ async def test_get_statuses(client, admin_token, test_status):
     assert len(response.json()) == 1
 
 
+async def test_get_statuses_as_manager(client, manager_token, test_status):
+    """Чтение каталога статусов доступно с employee:list — без system:manage."""
+    response = await client.get("/employee-statuses/", headers={"Authorization": f"Bearer {manager_token}"})
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+
+
+async def test_get_statuses_not_viewer(client, employee_token):
+    response = await client.get("/employee-statuses/", headers={"Authorization": f"Bearer {employee_token}"})
+    assert response.status_code == 403
+
+
 async def test_get_statuses_empty(client, admin_token):
     response = await client.get("/employee-statuses/", headers={"Authorization": f"Bearer {admin_token}"})
     assert response.status_code == 200

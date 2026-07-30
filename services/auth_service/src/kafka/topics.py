@@ -1,4 +1,5 @@
 EMPLOYEE_CREATED_TOPIC = "employee.created"
+PASSWORD_RESET_REQUESTED_TOPIC = "password_reset.requested"
 EMPLOYEE_ROLE_ASSIGNED_TOPIC = "employee.role_assigned"
 ROLE_CREATED_TOPIC = "role.created"
 ROLE_UPDATED_TOPIC = "role.updated"

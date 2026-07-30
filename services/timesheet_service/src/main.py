@@ -1,7 +1,9 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .database import engine, async_session_maker
 from .kafka.consumer import KafkaEventConsumer
@@ -19,6 +21,7 @@ from .models.production_calendar import ProductionCalendar
 from .models.timesheet_period import TimesheetPeriod
 from .models.time_entry import TimeEntry
 from .models.overtime_approval import OvertimeApproval
+from .models.absence import Absence
 from .seed import seed_entry_types, seed_production_calendar, seed_existing_employee_periods
 from .routers.production_calendar import router as calendar_router
 from .routers.timesheet_period import router as period_router
@@ -56,6 +59,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Timesheet Service", lifespan=lifespan)
+
+_cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(entry_type_router)
 app.include_router(calendar_router)

@@ -7,6 +7,7 @@ from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import async_session_maker
+from src.models.absence import Absence
 from src.models.employee import Employee
 from src.models.employee_project import Assignment
 from src.models.project import Project
@@ -88,7 +89,7 @@ async def handle_project_deleted(payload: dict[str, Any], producer=None) -> None
     async with async_session_maker() as session:
         project = await session.get(Project, project_id)
         if project:
-            session.delete(project)
+            await session.delete(project)
             await session.commit()
 
 
@@ -107,7 +108,7 @@ async def handle_project_role_deleted(payload: dict[str, Any], producer=None) ->
     async with async_session_maker() as session:
         pr = await session.get(ProjectRole, role_id)
         if pr:
-            session.delete(pr)
+            await session.delete(pr)
             await session.commit()
 
 
@@ -172,6 +173,22 @@ async def handle_employee_updated(payload: dict[str, Any], producer=None) -> Non
         await session.commit()
 
 
+async def handle_absence_status_changed(payload: dict[str, Any], producer=None) -> None:
+    """Реплика отсутствий — для блокировки записей табеля на согласованные даты."""
+    absence_id = UUID(str(payload["absence_id"]))
+    async with async_session_maker() as session:
+        absence = await session.get(Absence, absence_id)
+        if absence is None:
+            absence = Absence(id=absence_id)
+            session.add(absence)
+        absence.employee_id = UUID(str(payload["employee_id"]))
+        absence.type_code = payload.get("type_code")
+        absence.date_from = date.fromisoformat(payload["date_from"])
+        absence.date_to = date.fromisoformat(payload["date_to"])
+        absence.status = payload["status"]
+        await session.commit()
+
+
 async def handle_role_created(payload: dict[str, Any], producer=None) -> None:
     async with async_session_maker() as session:
         await _upsert_role(session, payload.get("role") or {})
@@ -189,7 +206,7 @@ async def handle_role_deleted(payload: dict[str, Any], producer=None) -> None:
     async with async_session_maker() as session:
         role = await session.get(Role, role_id)
         if role:
-            session.delete(role)
+            await session.delete(role)
             await session.commit()
 
 
@@ -242,11 +259,17 @@ async def _upsert_project(data: dict[str, Any]) -> None:
     async with async_session_maker() as session:
         project = await session.get(Project, project_id)
         if project is None:
-            project = Project(id=project_id, name=data["name"], status=data.get("status"))
+            project = Project(
+                id=project_id,
+                name=data["name"],
+                status=data.get("status"),
+                status_code=data.get("status_code"),
+            )
             session.add(project)
         else:
             project.name = data["name"]
             project.status = data.get("status")
+            project.status_code = data.get("status_code")
         await session.commit()
 
 

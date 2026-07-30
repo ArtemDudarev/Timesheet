@@ -29,6 +29,16 @@ async def test_login_success(client, regular_user):
     assert data["must_change_password"] is False
 
 
+async def test_login_email_case_insensitive(client, regular_user):
+    """Email при логине не чувствителен к регистру."""
+    response = await client.post("/auth/login", json={
+        "email": "EMPLOYEE@Test.COM",
+        "password": "Employee1!",
+    })
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+
 async def test_login_inactive_user(client, db_session, regular_user):
     """Деактивированный аккаунт → 403."""
     regular_user.is_active = False
