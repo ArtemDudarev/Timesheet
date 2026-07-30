@@ -5,3 +5,4 @@ __pycache__/
 BACKLOG.md
 .claude/
 .pytest_cache/
+.env
